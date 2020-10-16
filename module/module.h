@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-13 19:40:48
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 19:57:23
+// ModifyDate:   2020-10-16 19:33:57
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __MODULE_H__
@@ -34,6 +34,8 @@ namespace mod
     class Module
     {
     public:
+        Module() = default;
+        virtual ~Module() { };
         virtual std::map<std::string, double>collect() = 0;
     };
 
@@ -51,7 +53,6 @@ namespace mod
     {
         return t2 != 0 && t1 > 0 ? 1.0 * t1 / t2 : 0.0;
     }
-
 
 
 }; /* mod namespace end */

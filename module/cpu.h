@@ -3,17 +3,13 @@
 // Author:       dingfang
 // CreateDate:   2020-10-13 19:08:25
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 18:50:20
+// ModifyDate:   2020-10-16 19:33:03
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __CPU_H__
 #define __CPU_H__
 
-#include "common/type.h"
 #include "module.h"
-
-#include <map>
-#include <string>
 
 
 namespace mod
@@ -39,6 +35,8 @@ namespace mod
         : public Module
     {
     public:
+        Cpu() = default;
+        virtual ~Cpu() { };
         virtual std::map<std::string, double> collect() override;
 
     private:

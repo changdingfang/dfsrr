@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 19:20:12
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 18:50:47
+// ModifyDate:   2020-10-16 19:32:55
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -22,8 +22,6 @@ namespace mod
         this->readMemoryInfo();
         this->calculate();
 
-        lastMem_ = currMem_;
-
         return std::move(memMetric_);
     }
 
@@ -39,6 +37,7 @@ namespace mod
         }
 
         string line;
+        currMem_.clear();
         while (getline(f.ifstream(), line))
         {
             if (!line.compare(0, 9, "MemTotal:"))
@@ -48,6 +47,10 @@ namespace mod
             else if (!line.compare(0, 8, "MemFree:"))
             {
                 ::sscanf(line.c_str() + 8, "%llu", &currMem_.free);
+            }
+            else if (!line.compare(0, 13, "MemAvailable:"))
+            {
+                ::sscanf(line.c_str() + 13, "%llu", &currMem_.available);
             }
             else if (!line.compare(0, 8, "Buffers:"))
             {
@@ -95,18 +98,22 @@ namespace mod
     {
         memMetric_.clear();
         memMetric_["free"]      = currMem_.free << 10;
-        auto usedIt = memMetric_.insert(make_pair("used", (currMem_.total - currMem_.free - currMem_.buffers - currMem_.cached) << 10));
-        memMetric_["buff"]      = currMem_.buffers << 10;
-        memMetric_["cache"]     = currMem_.cached << 10;
-        memMetric_["total"]     = currMem_.total << 10;
-        if (currMem_.total != 0)
+        
+        UINT64 used = 0;
+        if (currMem_.available == 0)
         {
-            memMetric_["util"]      = usedIt.first->second * 100.0 / (currMem_.total << 10);
+            used = currMem_.total - currMem_.free - currMem_.buffers - currMem_.cached;
         }
         else
         {
-            memMetric_["util"]      = 0.0;
+            used = currMem_.total - currMem_.available;
         }
+        auto usedIt = memMetric_.insert(make_pair("used", used << 10));
+
+        memMetric_["buff"]      = currMem_.buffers << 10;
+        memMetric_["cache"]     = currMem_.cached << 10;
+        memMetric_["total"]     = currMem_.total << 10;
+        memMetric_["util"]      = Percent(used, currMem_.total);
 
 
         // memMetric_["active"]    = currMem_.inactive;
@@ -117,7 +124,6 @@ namespace mod
         // memMetric_["slab"]      = currMem_.slab;
         // memMetric_["com"]       = currMem_.committedAS;
     }
-
 
 
 }; /* mod namespace end */

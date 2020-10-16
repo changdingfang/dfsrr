@@ -3,17 +3,14 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 19:00:26
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 18:50:50
+// ModifyDate:   2020-10-16 19:32:42
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __MEMORY_H__
 #define __MEMORY_H__
 
-#include "common/type.h"
 #include "module.h"
 
-#include <map>
-#include <string>
 
 namespace mod
 {
@@ -23,6 +20,7 @@ namespace mod
     {
         UINT64 total;
         UINT64 free;
+        UINT64 available; /* 高版本系统内核拥有该字段 */
         UINT64 buffers;
         UINT64 cached;
         UINT64 active;
@@ -32,6 +30,22 @@ namespace mod
         UINT64 swapTotal;
         UINT64 swapFree;
         UINT64 committedAS;
+
+        void clear()
+        {
+            total       = 0;
+            free        = 0;
+            available   = 0;
+            buffers     = 0;
+            cached      = 0;
+            active      = 0;
+            inactive    = 0;
+            slab        = 0;
+            swapCached  = 0;
+            swapTotal   = 0;
+            swapFree    = 0;
+            committedAS = 0;
+        }
     };
 
 
@@ -39,6 +53,8 @@ namespace mod
         : public Module
     {
     public:
+        Memory() = default;
+        virtual ~Memory() { };
         virtual std::map<std::string, double> collect() override;
 
     private:
@@ -47,7 +63,6 @@ namespace mod
 
     private:
         MemoryStat_T currMem_;
-        MemoryStat_T lastMem_;
         std::map<std::string, double> memMetric_;
     };
 

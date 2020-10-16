@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:51:06
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 20:14:02
+// ModifyDate:   2020-10-16 20:51:49
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -37,9 +37,10 @@ void help()
     printf("\t--cpu\t\tCPU\n");
     printf("\t--memory\t内存\n");
     printf("\t--load\t\t系统运行队列和平均负载\n");
-    printf("\t--disk\t\t磁盘\n");
+    printf("\t--partition\t\t磁盘分区\n");
     printf("\t--tcp\t\ttcp流量\n");
     printf("\t--udp\t\tudp流量\n");
+    printf("\t--traffic\t\t流量\n");
 
     exit(0);
 }
@@ -67,7 +68,7 @@ int parseParam(int argc, char **argv, struct ModuleConfig_T &cfg)
             cfg.printMode = PRINT_LIVE;
         }
         else if (flag == "cpu" || flag == "memory" || flag == "mem" || flag == "load"
-                 || flag == "disk" || flag == "tcp" || flag == "udp")
+                 || flag == "partition" || flag == "tcp" || flag == "udp" || flag == "traffic")
         {
             cfg.name = flag;
         }
@@ -106,8 +107,8 @@ int init(int argc, char **argv)
 {
     // FILELOG | CONSOLE
     dflog::InitLog("./dfssrTool.log", dflog::loggerOption::CONSOLE);
-    dflog::SetLevel(INFO);
-    // dflog::SetLevel(DEBUG);
+    // dflog::SetLevel(INFO);
+    dflog::SetLevel(DEBUG);
 
     LOG(DEBUG, "dfssrtool is running...");
 

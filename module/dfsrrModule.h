@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:16:03
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 20:04:46
+// ModifyDate:   2020-10-16 19:33:26
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_MODULE_H__
@@ -13,9 +13,10 @@
 #include "cpu.h"
 #include "memory.h"
 #include "load.h"
-#include "disk.h"
 #include "tcp.h"
 #include "udp.h"
+#include "partition.h"
+#include "traffic.h"
 
 #include <string>
 #include <map>
@@ -42,10 +43,25 @@ namespace mod
             {
                 module_ = new Tcp();
             }
+            else if (name == "udp")
+            {
+                module_ = new Udp();
+            }
+            else if (name == "load")
+            {
+                module_ = new Load();
+            }
+            else if (name == "partition")
+            {
+                module_ = new Partition();
+            }
+            else if (name == "traffic")
+            {
+                module_ = new Traffic();
+            }
             else
             {
                 LOG(WARN, "not found module name!");
-                /* error */
             }
         }
 

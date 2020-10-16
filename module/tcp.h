@@ -3,18 +3,15 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 18:43:51
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 19:50:28
+// ModifyDate:   2020-10-16 19:34:29
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __TCP_H__
 #define __TCP_H__
 
 
-#include "common/type.h"
 #include "module.h"
 
-#include <string>
-#include <map>
 
 namespace mod
 {
@@ -40,6 +37,8 @@ namespace mod
         : public Module
     {
     public:
+        Tcp() = default;
+        virtual ~Tcp() { };
         virtual std::map<std::string, double> collect() override;
 
     private:

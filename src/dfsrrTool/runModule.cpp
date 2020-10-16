@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 18:41:02
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 21:04:18
+// ModifyDate:   2020-10-16 17:15:21
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -28,6 +28,7 @@ namespace dfssrTool
 
     int RunMode::run()
     {
+        LOG(DEBUG, "Run Mode run...");
         switch (config_.printMode)
         {
             case PRINT_LAST_N_DATA: this->printLastNData(); break;
@@ -52,6 +53,7 @@ namespace dfssrTool
 
     void RunMode::printLiveData()
     {
+        LOG(DEBUG, "print live data...");
         DfSrrModule dfsrr(config_.name);
         dfsrr.collect();
         ::sleep(config_.interval);
