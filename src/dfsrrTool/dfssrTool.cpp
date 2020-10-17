@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:51:06
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 20:51:49
+// ModifyDate:   2020-10-17 11:07:02
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -107,8 +107,8 @@ int init(int argc, char **argv)
 {
     // FILELOG | CONSOLE
     dflog::InitLog("./dfssrTool.log", dflog::loggerOption::CONSOLE);
-    // dflog::SetLevel(INFO);
-    dflog::SetLevel(DEBUG);
+    dflog::SetLevel(INFO);
+    // dflog::SetLevel(DEBUG);
 
     LOG(DEBUG, "dfssrtool is running...");
 

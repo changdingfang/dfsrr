@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-16 19:18:04
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 21:20:14
+// ModifyDate:   2020-10-17 11:25:53
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -37,7 +37,7 @@ namespace mod
             FileHelper f(NetDev);
             if (f.ifstream().fail())
             {
-                LOG(WARN, "open snmp file failed!");
+                LOG(WARN, "open net dev file failed!");
                 return -1;
             }
 

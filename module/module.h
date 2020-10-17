@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-13 19:40:48
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:33:57
+// ModifyDate:   2020-10-17 11:52:44
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __MODULE_H__
@@ -27,8 +27,9 @@ namespace mod
     static const std::string NetSnmp         = "/proc/net/snmp";
     static const std::string TcpFile         = "/proc/net/tcp";
     static const std::string NetStatFile     = "/proc/net/netstat";
+    static const std::string MtabFile        = "/etc/mtab";
 
-    static const std::string Uint[]          = {"", "K", "M", "G", "T"};
+    static const std::string Uint[]          = {"", "K", "M", "G", "T", "P"};
 
 
     class Module
