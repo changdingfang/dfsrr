@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 18:57:52
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:34:37
+// ModifyDate:   2020-10-19 20:07:33
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __UDP_H__
@@ -41,16 +41,15 @@ namespace mod
     public:
         Udp() = default;
         virtual ~Udp() { };
-        virtual std::map<std::string, double> collect() override;
+        virtual CollectData_T collect() override;
 
     private:
         int readSnmp();
-        int calculate();
+        int calculate(CollectData_T &cd);
 
     private:
         UdpStat_T currUdp_;
         UdpStat_T lastUdp_;
-        std::map<std::string, double> udpMetric_;
     };
 
 

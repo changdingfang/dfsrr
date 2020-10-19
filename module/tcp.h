@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 18:43:51
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:34:29
+// ModifyDate:   2020-10-19 20:07:04
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __TCP_H__
@@ -39,16 +39,15 @@ namespace mod
     public:
         Tcp() = default;
         virtual ~Tcp() { };
-        virtual std::map<std::string, double> collect() override;
+        virtual CollectData_T collect() override;
 
     private:
         int readSnmp();
-        int calculate();
+        int calculate(CollectData_T &cd);
 
     private:
         TcpStat_T currTcp_;
         TcpStat_T lastTcp_;
-        std::map<std::string, double> tcpMertic_;
     };
 
 

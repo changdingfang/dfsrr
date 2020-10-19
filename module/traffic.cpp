@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-16 19:18:04
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-17 11:25:53
+// ModifyDate:   2020-10-19 21:15:01
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -18,17 +18,19 @@ namespace mod
 {
 
 
-        std::map<std::string, double> Traffic::collect()
+        CollectData_T Traffic::collect()
         {
+            CollectData_T cd;
             if (this->readNetDev() != 0)
             {
-                return std::move(trafficMetric_);
+                return std::move(cd);
             }
-            this->calculate();
+
+            this->calculate(cd);
 
             lastTrafficMap_ = currTrafficMap_;
 
-            return std::move(trafficMetric_);
+            return std::move(cd);
         }
 
 
@@ -77,7 +79,7 @@ namespace mod
         }
 
 
-        int Traffic::calculate()
+        int Traffic::calculate(CollectData_T &cd)
         {
             TrafficStat_T totalSt = { 0 };
             UINT64 ts = 0;
@@ -101,6 +103,19 @@ namespace mod
                 UINT64 pkterrout    = Delta(currStat.pkterrout, lastStat.pkterrout);
                 UINT64 pktdrpout    = Delta(currStat.pktdrpout, lastStat.pktdrpout);
 
+                Data_T data;
+                double dpktin   = Ratio(pktin, ts);
+                double dpktout  = Ratio(pktout, ts);
+                double pktSum =  dpktin + dpktout;
+                data.modStatTagVec.push_back({ "device", devName });
+                data.modStatVec.push_back({ "bytin", Ratio(bytein, ts) });
+                data.modStatVec.push_back({ "bytout", Ratio(byteout, ts) });
+                data.modStatVec.push_back({ "pktin", dpktin });
+                data.modStatVec.push_back({ "pktout", dpktout });
+                data.modStatVec.push_back({ "pkterr", Ratio(pkterrin + pkterrout, pktSum) });
+                data.modStatVec.push_back({ "pktdrp", Ratio(pktdrpout + pktdrpout, pktSum) });
+                cd.dataVec.push_back(data);
+
                 totalSt.bytein      += bytein;
                 totalSt.byteout     += byteout;
                 totalSt.pktin       += pktin;
@@ -111,14 +126,18 @@ namespace mod
                 totalSt.pktdrpout   += pktdrpout;
             }
 
-            trafficMetric_["bytin"]     = Ratio(totalSt.bytein, ts);
-            trafficMetric_["bytout"]    = Ratio(totalSt.byteout, ts);
-            auto pktinIt = trafficMetric_.insert(make_pair("pktin", Ratio(totalSt.pktin, ts)));
-            auto pktoutIt = trafficMetric_.insert(make_pair("pktout", Ratio(totalSt.pktout, ts)));
-
-            double pktSum =  pktinIt.first->second + pktoutIt.first->second;
-            trafficMetric_["pkterr"]    = Ratio(totalSt.pkterrin + totalSt.pkterrout, pktSum);
-            trafficMetric_["pktdrp"]    = Ratio(totalSt.pktdrpin + totalSt.pktdrpout, pktSum);
+            Data_T data;
+            double dpktin   = Ratio(totalSt.pktin, ts);
+            double dpktout  = Ratio(totalSt.pktout, ts);
+            double pktSum =  dpktin + dpktout;
+            data.modStatTagVec.push_back({ "device", "total" });
+            data.modStatVec.push_back({ "bytin", Ratio(totalSt.bytein, ts) });
+            data.modStatVec.push_back({ "bytout", Ratio(totalSt.byteout, ts) });
+            data.modStatVec.push_back({ "pktin", dpktin });
+            data.modStatVec.push_back({ "pktout", dpktout });
+            data.modStatVec.push_back({ "pkterr", Ratio(totalSt.pkterrin + totalSt.pkterrout, pktSum) });
+            data.modStatVec.push_back({ "pktdrp", Ratio(totalSt.pktdrpout + totalSt.pktdrpout, pktSum) });
+            cd.dataVec.push_back(data);
 
             return 0;
         }

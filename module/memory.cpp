@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 19:20:12
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:32:55
+// ModifyDate:   2020-10-19 21:34:40
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -17,18 +17,18 @@ using namespace std;
 namespace mod
 {
 
-    std::map<std::string, double> Memory::collect()
+    CollectData_T Memory::collect()
     {
+        CollectData_T cd;
         this->readMemoryInfo();
-        this->calculate();
+        this->calculate(cd);
 
-        return std::move(memMetric_);
+        return std::move(cd);
     }
 
 
     int Memory::readMemoryInfo()
     {
-        MemoryStat_T ms;
         FileHelper f(MemoryInfoFIle);
         if (f.ifstream().fail())
         {
@@ -94,10 +94,8 @@ namespace mod
     }
 
 
-    int Memory::calculate()
+    int Memory::calculate(CollectData_T &cd)
     {
-        memMetric_.clear();
-        memMetric_["free"]      = currMem_.free << 10;
         
         UINT64 used = 0;
         if (currMem_.available == 0)
@@ -108,21 +106,18 @@ namespace mod
         {
             used = currMem_.total - currMem_.available;
         }
-        auto usedIt = memMetric_.insert(make_pair("used", used << 10));
 
-        memMetric_["buff"]      = currMem_.buffers << 10;
-        memMetric_["cache"]     = currMem_.cached << 10;
-        memMetric_["total"]     = currMem_.total << 10;
-        memMetric_["util"]      = Percent(used, currMem_.total);
+        Data_T data;
+        data.modStatVec.push_back({ "free", static_cast<double>(currMem_.free << 10) });
+        data.modStatVec.push_back({ "used", static_cast<double>(used << 10) });
+        data.modStatVec.push_back({ "buff", static_cast<double>(currMem_.buffers << 10) });
+        data.modStatVec.push_back({ "cache", static_cast<double>(currMem_.cached << 10) });
+        data.modStatVec.push_back({ "total", static_cast<double>(currMem_.total << 10) });
+        data.modStatVec.push_back({ "util", static_cast<double>(Percent(used, currMem_.total)) });
 
+        cd.dataVec.push_back(data);
 
-        // memMetric_["active"]    = currMem_.inactive;
-        // memMetric_["inactive"]  = currMem_.inactive;
-        // memMetric_["sTotal"]    = currMem_.swapTotal
-        // memMetric_["sCache"]    = currMem_.swapCached;
-        // memMetric_["sFree"]     = currMem_.swapFree;
-        // memMetric_["slab"]      = currMem_.slab;
-        // memMetric_["com"]       = currMem_.committedAS;
+        return 0;
     }
 
 

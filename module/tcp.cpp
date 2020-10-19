@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 18:53:10
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:34:22
+// ModifyDate:   2020-10-19 20:05:43
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -18,14 +18,15 @@ namespace mod
 {
 
 
-    std::map<std::string, double> Tcp::collect()
+    CollectData_T Tcp::collect()
     {
+        CollectData_T cd;
         this->readSnmp();
-        this->calculate();
+        this->calculate(cd);
 
         lastTcp_ = currTcp_;
 
-        return std::move(tcpMertic_);
+        return std::move(cd);
     }
 
 
@@ -72,24 +73,27 @@ namespace mod
     }
 
 
-    int Tcp::calculate()
+    int Tcp::calculate(CollectData_T &cd)
     {
         if (lastTcp_.timestamp == 0)
         {
             return 0;
         }
 
-        UINT64 ts = Delta(currTcp_.timestamp, lastTcp_.timestamp);
-        tcpMertic_["active"] = Ratio(Delta(currTcp_.activeOpens, lastTcp_.activeOpens), ts);
-        tcpMertic_["pasive"] = Ratio(Delta(currTcp_.passiveOpens, lastTcp_.passiveOpens), ts);
-        tcpMertic_["iseg"]   = Ratio(Delta(currTcp_.inSegs, lastTcp_.inSegs), ts);
-        double outseg = Delta(currTcp_.outSegs, lastTcp_.outSegs);
-        tcpMertic_["outseg"] = Ratio(outseg, ts);
-        tcpMertic_["EstRes"] = Ratio(Delta(currTcp_.estabResets, lastTcp_.estabResets), ts);
-        tcpMertic_["AtmpFa"] = Ratio(Delta(currTcp_.attemptFails, lastTcp_.attemptFails), ts);
-        tcpMertic_["CurrEs"] = Ratio(Delta(currTcp_.currEstab, lastTcp_.currEstab), ts);
+        UINT64 ts       = Delta(currTcp_.timestamp, lastTcp_.timestamp);
+        UINT64 outseg   = Delta(currTcp_.outSegs, lastTcp_.outSegs);
         double retran = Percent(Delta(currTcp_.retransSegs, lastTcp_.retransSegs), outseg);
-        tcpMertic_["retran"] = retran > 100.0 ? 100.0 : retran;
+        Data_T data;
+        data.modStatVec.push_back({ "active", Ratio(Delta(currTcp_.activeOpens, lastTcp_.activeOpens), ts) });
+        data.modStatVec.push_back({ "pasive", Ratio(Delta(currTcp_.passiveOpens, lastTcp_.passiveOpens), ts) });
+        data.modStatVec.push_back({ "iseg", Ratio(Delta(currTcp_.inSegs, lastTcp_.inSegs), ts) });
+        data.modStatVec.push_back({ "outseg", Ratio(outseg, ts) });
+        data.modStatVec.push_back({ "EstRes", Ratio(Delta(currTcp_.estabResets, lastTcp_.estabResets), ts) });
+        data.modStatVec.push_back({ "AtmpFa", Ratio(Delta(currTcp_.attemptFails, lastTcp_.attemptFails), ts) });
+        data.modStatVec.push_back({ "CurrEs", Ratio(Delta(currTcp_.currEstab, lastTcp_.currEstab), ts) });
+        data.modStatVec.push_back({ "retran", retran > 100.0 ? 100.0 : retran });
+
+        cd.dataVec.push_back(data);
 
         return 0;
     }

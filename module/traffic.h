@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-16 19:08:43
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 20:22:42
+// ModifyDate:   2020-10-19 20:37:30
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __TRAFFIC_H__
@@ -36,11 +36,11 @@ namespace mod
     public:
         Traffic() = default;
         virtual ~Traffic() { };
-        virtual std::map<std::string, double> collect() override;
+        virtual CollectData_T collect() override;
 
     private:
         int readNetDev();
-        int calculate();
+        int calculate(CollectData_T &cd);
         bool checkNetDev(const std::string &devName);
 
     private:

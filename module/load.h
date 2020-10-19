@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 18:57:44
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:33:44
+// ModifyDate:   2020-10-19 21:34:29
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __LOAD_H__
@@ -25,20 +25,19 @@ namespace mod
     };
 
 
-    class Load
+    class Load final
         : public Module
     {
     public:
         Load() = default;
         virtual ~Load() { };
-        virtual std::map<std::string, double> collect();
+        virtual CollectData_T collect() override;
 
     private:
         int readLoad();
 
     private:
         LoadStat_T currLoad_;
-        std::map<std::string, double> loadMetric_;
     };
 
 

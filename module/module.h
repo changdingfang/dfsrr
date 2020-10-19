@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-13 19:40:48
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-17 11:52:44
+// ModifyDate:   2020-10-19 19:39:12
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __MODULE_H__
@@ -14,6 +14,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 namespace mod
 {
@@ -25,11 +26,29 @@ namespace mod
     static const std::string LoadFile        = "/proc/loadavg";
     static const std::string NetDev          = "/proc/net/dev";
     static const std::string NetSnmp         = "/proc/net/snmp";
-    static const std::string TcpFile         = "/proc/net/tcp";
-    static const std::string NetStatFile     = "/proc/net/netstat";
     static const std::string MtabFile        = "/etc/mtab";
 
     static const std::string Uint[]          = {"", "K", "M", "G", "T", "P"};
+
+    template<typename K, typename V>
+    struct ModStat_T
+    {
+        K key;
+        V value;
+    };
+
+    struct Data_T
+    { 
+        std::vector< ModStat_T<std::string, std::string> >  modStatTagVec;
+        std::vector< ModStat_T<std::string, double> >       modStatVec;
+    };
+
+
+    struct CollectData_T
+    {
+        std::string moduleName;
+        std::vector<Data_T> dataVec;
+    };
 
 
     class Module
@@ -37,7 +56,7 @@ namespace mod
     public:
         Module() = default;
         virtual ~Module() { };
-        virtual std::map<std::string, double>collect() = 0;
+        virtual CollectData_T collect() = 0;
     };
 
     inline UINT64 Delta(UINT64 t1, UINT64 t2)

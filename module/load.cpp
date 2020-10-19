@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 21:17:08
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:33:43
+// ModifyDate:   2020-10-19 21:34:32
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -16,11 +16,20 @@ namespace mod
 {
 
 
-    std::map<std::string, double> Load::collect()
+    CollectData_T Load::collect()
     {
+        CollectData_T cd;
         this->readLoad();
 
-        return std::move(loadMetric_);
+        Data_T data;
+        data.modStatVec.push_back({ "load1", currLoad_.load1 });
+        data.modStatVec.push_back({ "load5", currLoad_.load5 });
+        data.modStatVec.push_back({ "load15", currLoad_.load15 });
+        data.modStatVec.push_back({ "runq", currLoad_.nrRuning });
+        data.modStatVec.push_back({ "plit", currLoad_.nrThreads});
+        cd.dataVec.push_back(data);
+
+        return std::move(cd);
     }
 
 
@@ -39,12 +48,6 @@ namespace mod
             >> currLoad_.nrRuning;
         f.ifstream().get();
         f.ifstream() >> currLoad_.nrThreads;
-
-        loadMetric_["load1"]    = currLoad_.load1;
-        loadMetric_["load5"]    = currLoad_.load5;
-        loadMetric_["load15"]   = currLoad_.load15;
-        loadMetric_["runq"]     = currLoad_.nrRuning;
-        loadMetric_["plit"]     = currLoad_.nrThreads;
 
         return 0;
     }

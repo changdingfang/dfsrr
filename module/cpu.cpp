@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-13 19:13:37
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 18:50:08
+// ModifyDate:   2020-10-19 21:34:22
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -17,14 +17,15 @@ namespace mod
 {
 
 
-    map<string, double> Cpu::collect()
+    CollectData_T Cpu::collect()
     {
+        CollectData_T cd;
         this->readStats(currCpuStat_);
-        this->calculate(currCpuStat_, lastCpuStat_);
+        this->calculate(cd);
 
         lastCpuStat_ = currCpuStat_;
 
-        return std::move(cpuMetric_);
+        return std::move(cd);
     }
 
 
@@ -75,42 +76,42 @@ namespace mod
     }
 
 
-    int Cpu::calculate(const struct CpuStat_T &currCpuStat, const struct CpuStat_T &lastCpuStat)
+    int Cpu::calculate(CollectData_T &cd)
     {
-        if (lastCpuStat.user == 0)
+        if (lastCpuStat_.user == 0)
         {
             return 0;
         }
 
-        UINT64 user = Delta(currCpuStat.user, lastCpuStat.user);
-        UINT64 nice = Delta(currCpuStat.nice, lastCpuStat.nice);
-        UINT64 system = Delta(currCpuStat.system, lastCpuStat.system);
-        UINT64 idle = Delta(currCpuStat.idle, lastCpuStat.idle);
-        UINT64 ioWait = Delta(currCpuStat.ioWait, lastCpuStat.ioWait);
-        UINT64 irq = Delta(currCpuStat.irq, lastCpuStat.irq);
-        UINT64 softIrq = Delta(currCpuStat.softIrq, lastCpuStat.softIrq);
-        UINT64 steal = Delta(currCpuStat.steal, lastCpuStat.steal);
+        UINT64 user = Delta(currCpuStat_.user, lastCpuStat_.user);
+        UINT64 nice = Delta(currCpuStat_.nice, lastCpuStat_.nice);
+        UINT64 system = Delta(currCpuStat_.system, lastCpuStat_.system);
+        UINT64 idle = Delta(currCpuStat_.idle, lastCpuStat_.idle);
+        UINT64 ioWait = Delta(currCpuStat_.ioWait, lastCpuStat_.ioWait);
+        UINT64 irq = Delta(currCpuStat_.irq, lastCpuStat_.irq);
+        UINT64 softIrq = Delta(currCpuStat_.softIrq, lastCpuStat_.softIrq);
+        UINT64 steal = Delta(currCpuStat_.steal, lastCpuStat_.steal);
         UINT64 total = user + nice + system + idle + ioWait + irq + softIrq + steal;
 
-        cpuMetric_.clear();
-        // cpuMetric_["ncpu"]     = currCpuStat.cpuNumber;
-        auto userIt   = cpuMetric_.insert(make_pair("user", Percent(user, total)));
-        // cpuMetric_.insert(make_pair("nice", Percent(nice, total)));
-        auto systemIt = cpuMetric_.insert(make_pair("sys", Percent(system, total)));
-        auto idleIt   = cpuMetric_.insert(make_pair("idle", Percent(idle, total)));
-        auto ioWaitIt = cpuMetric_.insert(make_pair("wait", Percent(ioWait, total)));
-        cpuMetric_.insert(make_pair("hirq", Percent(irq, total)));
-        cpuMetric_.insert(make_pair("sirq", Percent(softIrq, total)));
-        auto stealIt  = cpuMetric_.insert(make_pair("steal", Percent(steal, total)));
-        if (systemIt.second == true && userIt.second == true)
-        {
-            // cpuMetric_.insert(make_pair("systemUser", systemIt.first->second + userIt.first->second));
-        }
+        double duser    = Percent(user, total);
+        double dsys     = Percent(system, total);
+        double didle    = Percent(idle, total);
+        double dwait    = Percent(ioWait, total);
+        double dsteal  = Percent(steal, total);
+        Data_T data;
+        data.modStatVec.push_back({ "user", duser });
+        data.modStatVec.push_back({ "sys", dsys });
+        data.modStatVec.push_back({ "wait", dwait });
+        data.modStatVec.push_back({ "hirq", Percent(irq, total) });
+        data.modStatVec.push_back({ "sirq", Percent(softIrq, total) });
+        // data.modStatVec.push_back({ "steal", dsteal });
+        // data.modStatVec.push_back({ "sysUser", dsys + duser});
+        data.modStatVec.push_back({ "util", 100.0 - didle - dwait - dsteal });
+        data.modStatVec.push_back({ "idle", didle });
 
-        if (idleIt.second == true && ioWaitIt.second == true && stealIt.second == true)
-        {
-            cpuMetric_.insert(make_pair("util", 100.0 - idleIt.first->second - ioWaitIt.first->second - stealIt.first->second));
-        }
+        // data.modStatVec.push_back({ "nice", Percent(nice, total) });
+        // data.modStatVec.push_back({ "ncpu", currCpuStat_.cpuNumber });
+        cd.dataVec.push_back(data);
 
         return 0;
     }

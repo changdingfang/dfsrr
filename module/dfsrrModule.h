@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:16:03
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:33:26
+// ModifyDate:   2020-10-19 21:34:52
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_MODULE_H__
@@ -71,17 +71,17 @@ namespace mod
             module_ = nullptr;
         }
 
-        std::map<std::string, double> collect()
+        CollectData_T collect()
         {
             if (module_ == nullptr)
             {
                 LOG(WARN, "module not found!");
-                return std::map<std::string, double>();
+                return CollectData_T();
             }
 
             return std::move(module_->collect());
         }
-        
+
     private:
         std::string name_;
         Module * module_ { nullptr };

@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-13 19:08:25
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:33:03
+// ModifyDate:   2020-10-19 21:34:18
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __CPU_H__
@@ -37,16 +37,15 @@ namespace mod
     public:
         Cpu() = default;
         virtual ~Cpu() { };
-        virtual std::map<std::string, double> collect() override;
+        virtual CollectData_T collect() override;
 
     private:
         int readStats(struct CpuStat_T &cpuStat);
-        int calculate(const struct CpuStat_T &currCpuStat, const struct CpuStat_T &lastCpuStat);
+        int calculate(CollectData_T &cd);
 
     private:
         CpuStat_T currCpuStat_;
         CpuStat_T lastCpuStat_;
-        std::map<std::string, double> cpuMetric_;
     };
 
 

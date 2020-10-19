@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-16 19:07:49
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-17 18:57:28
+// ModifyDate:   2020-10-19 19:15:01
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __PARTITION_H__
@@ -17,41 +17,31 @@ namespace mod
 
     struct PartitionStat_T
     {
-        UINT64 bszie;
-        UINT64 blocks;
-        UINT64 bfree;
-        UINT64 bavail;
-        UINT64 itotal;
-        UINT64 ifree;
-
-        void clear()
-        {
-        bszie   = 0;
-        blocks  = 0;
-        bfree   = 0;
-        bavail  = 0;
-        itotal  = 0;
-        ifree   = 0;
-        }
+        UINT64 bszie    { 0 };
+        UINT64 blocks   { 0 };
+        UINT64 bfree    { 0 };
+        UINT64 bavail   { 0 };
+        UINT64 itotal   { 0 };
+        UINT64 ifree    { 0 };
+        std::string device { "" };
+        std::string mount  { "" };
     };
 
 
-    class Partition
+    class Partition final
         : public Module
     {
     public:
         Partition() = default;
         virtual ~Partition() { };
-        virtual std::map<std::string, double> collect() override;
+        virtual CollectData_T collect() override;
 
     private:
         int readStat();
-        int readPartitionStat(const char *fsname, struct PartitionStat_T &ps);
-        int calculate();
+        int calculate(CollectData_T &cd);
 
     private:
-        PartitionStat_T currPartition_;
-        std::map<std::string, double> partitionMetric_;
+        std::vector<PartitionStat_T> currPartitionVec_;
     };
 
 

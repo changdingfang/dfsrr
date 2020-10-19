@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 21:17:41
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:34:42
+// ModifyDate:   2020-10-19 20:10:02
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -16,14 +16,15 @@ namespace mod
 {
 
 
-    std::map<std::string, double> Udp::collect()
+    CollectData_T Udp::collect()
     {
+        CollectData_T cd;
         this->readSnmp();
-        this->calculate();
+        this->calculate(cd);
 
         lastUdp_ = currUdp_;
 
-        return std::move(udpMetric_);
+        return std::move(cd);
     }
 
 
@@ -64,7 +65,7 @@ namespace mod
     }
 
 
-    int Udp::calculate()
+    int Udp::calculate(CollectData_T &cd)
     {
         if (lastUdp_.timestamp == 0)
         {
@@ -72,10 +73,13 @@ namespace mod
         }
 
         UINT64 ts = Delta(currUdp_.timestamp, lastUdp_.timestamp);
-        udpMetric_["idgm"] = Ratio(Delta(currUdp_.inDatagrams, lastUdp_.inDatagrams), ts);
-        udpMetric_["odgm"] = Ratio(Delta(currUdp_.outDatagrams, lastUdp_.outDatagrams), ts);
-        udpMetric_["noport"] = Ratio(Delta(currUdp_.noPorts, lastUdp_.noPorts), ts);
-        udpMetric_["idmerr"] = Ratio(Delta(currUdp_.inErrors, lastUdp_.inErrors), ts);
+        Data_T data;
+        data.modStatVec.push_back({ "idgm", Ratio(Delta(currUdp_.inDatagrams, lastUdp_.inDatagrams), ts) });
+        data.modStatVec.push_back({ "odgm", Ratio(Delta(currUdp_.outDatagrams, lastUdp_.outDatagrams), ts) });
+        data.modStatVec.push_back({ "noport", Ratio(Delta(currUdp_.noPorts, lastUdp_.noPorts), ts) });
+        data.modStatVec.push_back({ "idmerr", Ratio(Delta(currUdp_.inErrors, lastUdp_.inErrors), ts) });
+
+        cd.dataVec.push_back(data);
 
         return 0;
     }

@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 19:00:26
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 19:32:42
+// ModifyDate:   2020-10-19 21:34:37
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __MEMORY_H__
@@ -55,15 +55,14 @@ namespace mod
     public:
         Memory() = default;
         virtual ~Memory() { };
-        virtual std::map<std::string, double> collect() override;
+        virtual CollectData_T collect() override;
 
     private:
         int readMemoryInfo();
-        int calculate();
+        int calculate(CollectData_T &cd);
 
     private:
         MemoryStat_T currMem_;
-        std::map<std::string, double> memMetric_;
     };
 
 

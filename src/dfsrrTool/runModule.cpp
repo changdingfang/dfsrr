@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 18:41:02
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-16 17:15:21
+// ModifyDate:   2020-10-19 21:30:57
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -36,6 +36,8 @@ namespace dfssrTool
             case PRINT_LIVE:        this->printLiveData();  break;
             default: printf("not found mod\n"); exit(-1);
         }
+
+        return 0;
     }
 
 
@@ -58,13 +60,21 @@ namespace dfssrTool
         dfsrr.collect();
         ::sleep(config_.interval);
 
-        map<string, double> m;
-
         string head, optLine;
-        m = std::move(dfsrr.collect());
-        for (const auto &it : m)
+        CollectData_T cd;
+        cd = std::move(dfsrr.collect());
+        for (const auto &data : cd.dataVec)
         {
-            this->formatHead(it.first, optLine, head);
+            for (const auto &modStat : data.modStatVec)
+            {
+                this->formatHead(modStat.key, optLine, head);
+            }
+
+            for (const auto &tag : data.modStatTagVec)
+            {
+                this->formatHead(tag.key, optLine, head);
+            }
+            break;
         }
         optLine += "----";
 
@@ -73,24 +83,41 @@ namespace dfssrTool
 
         while (true)
         {
-            m = std::move(dfsrr.collect());
-            value.clear();
-            for (const auto &it : m)
+            cd = std::move(dfsrr.collect());
+            for (const auto &data : cd.dataVec)
             {
-                this->formatValue(it.second, value);
-            }
+                value.clear();
+                for (const auto &modStat : data.modStatVec)
+                {
+                    this->formatValue(modStat.value, value);
+                }
 
-            if (count++ % 12 == 0)
-            {
-                printf("%s%s%s\n", optLine.c_str(), config_.name.c_str(), optLine.c_str());
-                printf("Time\t\t%s\n", head.c_str());
-            }
+                for (const auto &tag : data.modStatTagVec)
+                {
+                    this->formatTag(tag.value, value);
+                }
 
-            time_t t1;
-            ::time(&t1);
-            char t[32] { 0 };
-            ::strftime(t, sizeof(t), "%d/%m %H:%M:%S", ::localtime(&t1));
-            printf("%s\t%s\n", t, value.c_str());
+
+                if (count % 20 == 0)
+                {
+                    printf("%s%s%s\n", optLine.c_str(), config_.name.c_str(), optLine.c_str());
+                    printf("Time\t\t%s\n", head.c_str());
+                }
+
+                if (count % cd.dataVec.size() == 0)
+                {
+                    time_t t1;
+                    ::time(&t1);
+                    char t[32] { 0 };
+                    ::strftime(t, sizeof(t), "%d/%m %H:%M:%S", ::localtime(&t1));
+                    printf("%s\t%s\n", t, value.c_str());
+                }
+                else
+                {
+                    printf("              \t%s\n", value.c_str());
+                }
+                ++count;
+            }
 
             ::usleep(config_.interval * 1000 * 1000);
         }
@@ -108,6 +135,13 @@ namespace dfssrTool
         }
         headStr += space + metric;
         headStr += "\t";
+    }
+
+
+    void RunMode::formatTag(const std::string &value, std::string &valueStr)
+    {
+        valueStr += value;
+        valueStr += "\t";
     }
 
 

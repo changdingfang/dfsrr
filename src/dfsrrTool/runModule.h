@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:25:08
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-15 18:41:47
+// ModifyDate:   2020-10-19 19:48:35
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __RUN_MODULE_H__
@@ -47,6 +47,7 @@ namespace dfssrTool
         void printHead();
 
         void formatHead(const std::string &metric, std::string &optLine, std::string &headStr);
+        void formatTag(const std::string &value, std::string &valueStr);
         void formatValue(double value, std::string &valueStr);
 
 
