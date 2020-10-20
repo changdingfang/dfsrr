@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:51:06
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-17 11:07:02
+// ModifyDate:   2020-10-19 21:43:21
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -37,10 +37,10 @@ void help()
     printf("\t--cpu\t\tCPU\n");
     printf("\t--memory\t内存\n");
     printf("\t--load\t\t系统运行队列和平均负载\n");
-    printf("\t--partition\t\t磁盘分区\n");
+    printf("\t--partition\t磁盘分区\n");
     printf("\t--tcp\t\ttcp流量\n");
     printf("\t--udp\t\tudp流量\n");
-    printf("\t--traffic\t\t流量\n");
+    printf("\t--traffic\t流量\n");
 
     exit(0);
 }

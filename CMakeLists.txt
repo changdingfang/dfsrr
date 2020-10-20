@@ -9,22 +9,28 @@ set(ROOT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 set(EXECUTABLE_OUTPUT_PATH ${ROOT_DIRECTORY}/build/bin)
 set(LIBRARY_OUTPUT_PATH ${ROOT_DIRECTORY}/build/lib)
 
-set(DEP_INCLUDE "${ROOT_DIRECTORY}/depend/include")
-set(DEP_LIB "${ROOT_DIRECTORY}/depend/lib")
+set(DEP_INCLUDE "${ROOT_DIRECTORY}/depend/compiled/include")
+set(DEP_LIB "${ROOT_DIRECTORY}/depend/compiled/lib")
+
+option(DEPEND_BUILD "depend build" OFF)
+
+if (DEPEND_BUILD)
+    # dflog fmt三方依赖源码编译
+    message(STATUS "build depend")
+    set(DEPEND_SRC "${ROOT_DIRECTORY}/depend/src")
+    set(DEP_INCLUDE "${DEPEND_SRC}")
+    set(DEP_LIB "${DEPEND_SRC}")
+    set(DFLOG_SRC "${DEPEND_SRC}")
+    add_subdirectory(${DFLOG_SRC}/fmt)
+    add_subdirectory(${DFLOG_SRC}/dflog)
+    message(STATUS "depend src: ${DEPEND_SRC}")
+endif()
+
+message(STATUS "depend build: ${DEPEND_BUILD}")
 
 message(STATUS "DEP_INCLUDE: ${DEP_INCLUDE}")
 message(STATUS "DEP_LIB: ${DEP_LIB}")
 
-option(DFSRR_TEST "build test dfsrr" OFF)
-
-message("... chekc")
-message("dfsrr test: ${DFSRR_TEST}")
-
 # add_subdirectory(src/dfsrr)
 add_subdirectory(src/dfsrrTool)
 add_subdirectory(module)
-
-if (DFSRR_TEST)
-    message("... test")
-    add_subdirectory(tests)
-endif()
