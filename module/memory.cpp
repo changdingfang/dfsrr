@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 19:20:12
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-19 21:34:40
+// ModifyDate:   2020-10-20 20:12:21
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -20,6 +20,7 @@ namespace mod
     CollectData_T Memory::collect()
     {
         CollectData_T cd;
+        cd.moduleName = "memory";
         this->readMemoryInfo();
         this->calculate(cd);
 

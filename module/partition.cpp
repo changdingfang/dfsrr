@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-17 11:22:23
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-19 19:34:24
+// ModifyDate:   2020-10-20 20:12:42
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -24,6 +24,7 @@ namespace mod
     CollectData_T Partition::collect()
     {
         CollectData_T cd;
+        cd.moduleName = "partition";
         this->readStat();
         this->calculate(cd);
 

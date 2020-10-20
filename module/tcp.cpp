@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 18:53:10
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-19 20:05:43
+// ModifyDate:   2020-10-20 20:13:00
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -21,6 +21,7 @@ namespace mod
     CollectData_T Tcp::collect()
     {
         CollectData_T cd;
+        cd.moduleName = "tcp";
         this->readSnmp();
         this->calculate(cd);
 

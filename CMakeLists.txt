@@ -31,6 +31,6 @@ message(STATUS "depend build: ${DEPEND_BUILD}")
 message(STATUS "DEP_INCLUDE: ${DEP_INCLUDE}")
 message(STATUS "DEP_LIB: ${DEP_LIB}")
 
-# add_subdirectory(src/dfsrr)
-add_subdirectory(src/dfsrrTool)
+add_subdirectory(src/dfsrr)
+# add_subdirectory(src/dfsrrTool)
 add_subdirectory(module)

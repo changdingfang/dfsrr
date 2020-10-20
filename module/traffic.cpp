@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-16 19:18:04
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-19 21:15:01
+// ModifyDate:   2020-10-20 20:13:11
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -21,6 +21,7 @@ namespace mod
         CollectData_T Traffic::collect()
         {
             CollectData_T cd;
+            cd.moduleName = "traffic";
             if (this->readNetDev() != 0)
             {
                 return std::move(cd);

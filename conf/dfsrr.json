@@ -1,0 +1,61 @@
+{
+    "//log level" : "debug, info, warn, error, critical",
+    "logLevel" : "info",
+    "output" : 
+    [
+        {
+            "type" : "local",
+            "pathdir" : "/home/dingfang/git/dfsrr/build"
+        },
+        {
+            "type" : "tcp",
+            "addr" : "127.0.0.1",
+            "port" : 39999
+        }
+    ],
+    "module":
+    [
+        {
+            "module" : "cpu",
+            "name" : "cpu",
+            "interval" : 1,
+            "filter" : []
+        },
+        {
+            "module" : "memory",
+            "name" : "memory",
+            "interval" : 1,
+            "filter" : []
+        },
+        {
+            "module" : "load",
+            "name" : "load",
+            "interval" : 1,
+            "filter" : []
+        },
+        {
+            "module" : "tcp",
+            "name" : "tcp",
+            "interval" : 1,
+            "filter" : []
+        },
+        {
+            "module" : "udp",
+            "name" : "udp",
+            "interval" : 1,
+            "filter" : []
+        },
+        {
+            "module" : "traffic",
+            "name" : "traffic",
+            "interval" : 1,
+            "filter" : []
+        },
+        {
+            "module" : "partition",
+            "name" : "partition",
+            "interval" : 1,
+            "filter" : []
+        }
+    ]
+}

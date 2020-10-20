@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-13 19:13:37
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-19 21:34:22
+// ModifyDate:   2020-10-20 18:39:07
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -20,6 +20,7 @@ namespace mod
     CollectData_T Cpu::collect()
     {
         CollectData_T cd;
+        cd.moduleName = "cpu";
         this->readStats(currCpuStat_);
         this->calculate(cd);
 

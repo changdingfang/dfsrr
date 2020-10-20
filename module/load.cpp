@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-15 21:17:08
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-19 21:34:32
+// ModifyDate:   2020-10-20 20:12:04
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -19,6 +19,7 @@ namespace mod
     CollectData_T Load::collect()
     {
         CollectData_T cd;
+        cd.moduleName = "load";
         this->readLoad();
 
         Data_T data;
