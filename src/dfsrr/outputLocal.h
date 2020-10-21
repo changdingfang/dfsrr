@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 20:17:20
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-20 21:46:06
+// ModifyDate:   2020-10-21 18:53:17
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __OUTPUT_LOCAL_H__
@@ -13,7 +13,6 @@
 
 #include <queue>
 #include <mutex>
-#include <condition_variable>
 
 namespace dfsrr
 {

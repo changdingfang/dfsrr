@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 20:47:17
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-20 21:46:12
+// ModifyDate:   2020-10-21 08:26:32
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -17,6 +17,7 @@ namespace dfsrr
 
     OutputLocal::OutputLocal(std::string datadir)
         : datadir_(datadir)
+          , maxSize_(2048)
     {
     }
 
@@ -52,7 +53,7 @@ namespace dfsrr
             std::unique_lock<std::mutex> lock(mutex_);
             if (dataQueue_.empty())
             {
-                LOG(DEBUG, "data queue is empty...");
+                // LOG(DEBUG, "data queue is empty...");
                 return 0;
             }
             ld = dataQueue_.front();

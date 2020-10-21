@@ -1,11 +1,17 @@
 {
-    "//log level" : "debug, info, warn, error, critical",
-    "logLevel" : "info",
+    "log" :
+    {
+        "file" : "/home/dingfang/work/dfsrr/build/dfsrr.log",
+        "//output" : "[console, file]",
+        "output" : ["file"],
+        "//log level" : "debug, info, warn, error, critical",
+        "level" : "info"
+    },
     "output" : 
     [
         {
             "type" : "local",
-            "pathdir" : "/home/dingfang/git/dfsrr/build"
+            "pathdir" : "/home/dingfang/work/dfsrr/build/data"
         },
         {
             "type" : "tcp",

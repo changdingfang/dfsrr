@@ -3,16 +3,14 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:14:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-20 21:40:48
+// ModifyDate:   2020-10-21 18:52:55
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dfsrr/dfsrr.h"
+#include "common/common.h"
 #include "dfsrr/outputLocal.h"
-#include "nlohmann/json.hpp"
 
 #include <unistd.h>
-
-#include <fstream>
 
 using namespace std;
 using namespace mod;
@@ -22,12 +20,11 @@ namespace dfsrr
 {
 
 
-    Dfsrr::Dfsrr(std::string configFile)
+    Dfsrr::Dfsrr(json conf)
         : stop_(false)
-          , configFile_(configFile)
           , config_()
     {
-        if (!this->parseConfig())
+        if (!this->parseConfig(conf))
         {
             throw ("parse config error!");
         }
@@ -36,6 +33,10 @@ namespace dfsrr
 
     void Dfsrr::run()
     {
+        stop_ =  false;
+
+        sendThreadPtr_ = make_shared<std::thread>(Dfsrr::sendData, this);
+
         while (!this->isStop())
         {
             for (auto &mod : moduleVec_)
@@ -52,43 +53,19 @@ namespace dfsrr
                 {
                     string data;
                     output->conver(cd, data);
-                    LOG(DEBUG, "data: [{}]", data);
-                    output->addData(cd.moduleName, 100, data);
-                    output->sendData();
+                    // LOG(DEBUG, "data: [{}]", data);
+                    output->addData(cd.moduleName, mod.lastTime, data);
                 }
             }
             ::usleep(config_.intv);
         }
+
+        sendThreadPtr_->join();
     }
 
 
-    bool Dfsrr::parseConfig()
+    bool Dfsrr::parseConfig(const json &confJson)
     {
-        if (configFile_.empty())
-        {
-            LOG(WARN, "config file is empty");
-            return false;
-        }
-
-        std::ifstream fin;
-        fin.open(configFile_, std::ios_base::in);
-        if (fin.fail())
-        {
-            LOG(WARN, "open config file failed!");
-            return false;
-        }
-
-        string configContent(""), line;
-
-        while (getline(fin, line))
-        {
-            configContent += line;
-        }
-
-        fin.close();
-
-        auto confJson = json::parse(configContent);
-
         config_.intv = 10 * 1000;
 
         for (const auto &output : confJson["output"])
@@ -97,7 +74,7 @@ namespace dfsrr
             if (output["type"] == "local")
             {
                 config_.outputLocal = { true, output["pathdir"] };
-
+                common::createDir(config_.outputLocal.pathdir);
                 outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir));
             }
             else if (output["type"] == "tcp")
@@ -109,10 +86,40 @@ namespace dfsrr
 
         for (const auto &mod : confJson["module"])
         {
-            moduleVec_.push_back({ make_shared<DfSrrModule>(mod["module"]), mod["module"], mod["name"], mod["interval"], mod["filter"], 0 });
+            moduleVec_.push_back(
+                    { 
+                    make_shared<DfSrrModule>(mod["module"])
+                    , mod["module"]
+                    , mod["name"]
+                    , mod["interval"]
+                    , mod["filter"]
+                    , 0 
+                    });
         }
 
         return true;
+    }
+
+
+    int Dfsrr::sendData(Dfsrr *p)
+    {
+        LOG(INFO, "send data!");
+        if (p == nullptr)
+        {
+            LOG(ERROR, "dfsrr ptr is null");
+            return -1;
+        }
+
+        while (!p->isStop())
+        {
+            for (auto &output : p->outputVec_)
+            {
+                output->sendData();
+            }
+            ::usleep(p->config_.intv * 3);
+        }
+
+        return 0;
     }
 
 

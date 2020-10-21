@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:08:11
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-20 21:14:03
+// ModifyDate:   2020-10-21 18:52:50
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_H__
@@ -12,11 +12,13 @@
 #include "common/type.h"
 #include "dfsrr/output.h"
 #include "dfsrrModule.h"
+#include "nlohmann/json.hpp"
 
 #include <memory>
 #include <string>
 #include <vector>
 #include <set>
+#include <thread>
 
 namespace dfsrr
 {
@@ -59,22 +61,26 @@ namespace dfsrr
     class Dfsrr
     {
     public:
-        Dfsrr(std::string configPath);
+        Dfsrr(nlohmann::json conf);
         ~Dfsrr() { };
 
         void run();
+        inline void stop() { stop_ = true; };
 
     private:
-        bool parseConfig();
+        bool parseConfig(const nlohmann::json &);
         inline bool isStop() { return stop_; };
+
+        static int sendData(Dfsrr *p);
 
     private:
         bool stop_;
-        std::string configFile_;
         DfsrrConfig_T config_;
 
         std::vector<Module_T> moduleVec_;
         std::vector< std::shared_ptr<Output> > outputVec_;
+
+        std::shared_ptr<std::thread> sendThreadPtr_;
     };
 
 
