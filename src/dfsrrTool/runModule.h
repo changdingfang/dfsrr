@@ -3,13 +3,14 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:25:08
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-19 19:48:35
+// ModifyDate:   2020-10-22 18:50:58
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __RUN_MODULE_H__
 #define __RUN_MODULE_H__
 
 #include "common/type.h"
+#include "dfsrrModule.h"
 
 namespace dfssrTool
 {
@@ -44,7 +45,8 @@ namespace dfssrTool
         void printDateDate();
         void printLiveData();
 
-        void printHead();
+        void printHead(const mod::CollectData_T &cd);
+        void printValue(const mod::CollectData_T &cd, const std::string &ts);
 
         void formatHead(const std::string &metric, std::string &optLine, std::string &headStr);
         void formatTag(const std::string &value, std::string &valueStr);

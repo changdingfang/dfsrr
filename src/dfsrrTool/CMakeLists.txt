@@ -8,8 +8,6 @@ include_directories(${DEP_INCLUDE})
 
 link_directories(${DEP_LIB})
 
-# message(STATUS "DEP_INCLUDE: ${DEP_INCLUDE}")
-# message(STATUS "DEP_LIB: ${DEP_LIB}")
 
 add_executable(dfsrrTool ${SOURCE_FILES})
-target_link_libraries(dfsrrTool dfmodule dflog fmt)
+target_link_libraries(dfsrrTool dfmodule dflog fmt common)

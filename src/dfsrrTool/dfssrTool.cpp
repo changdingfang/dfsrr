@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:51:06
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-19 21:43:21
+// ModifyDate:   2020-10-22 20:51:52
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -106,7 +106,7 @@ int parseParam(int argc, char **argv, struct ModuleConfig_T &cfg)
 int init(int argc, char **argv)
 {
     // FILELOG | CONSOLE
-    dflog::InitLog("./dfssrTool.log", dflog::loggerOption::CONSOLE);
+    dflog::InitLog("", dflog::loggerOption::CONSOLE);
     dflog::SetLevel(INFO);
     // dflog::SetLevel(DEBUG);
 
