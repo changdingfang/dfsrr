@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:14:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-21 18:52:55
+// ModifyDate:   2020-10-22 19:35:14
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dfsrr/dfsrr.h"
@@ -48,11 +48,16 @@ namespace dfsrr
                 }
                 mod.lastTime = nowTime;
                 CollectData_T cd = mod.modPtr->collect();
+                if (cd.dataVec.empty())
+                {
+                    LOG(WARN, "collect data is null! module: [{}]", cd.moduleName);
+                    continue;
+                }
 
                 for (auto &output : outputVec_)
                 {
                     string data;
-                    output->conver(cd, data);
+                    output->convert(cd, mod.lastTime, data);
                     // LOG(DEBUG, "data: [{}]", data);
                     output->addData(cd.moduleName, mod.lastTime, data);
                 }

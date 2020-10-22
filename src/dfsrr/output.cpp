@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 20:15:22
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-21 18:53:13
+// ModifyDate:   2020-10-22 19:35:27
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "output.h"
@@ -14,7 +14,7 @@ namespace dfsrr
 {
 
 
-        int Output::conver(const mod::CollectData_T &cd, std::string &data)
+        int Output::convert(const mod::CollectData_T &cd, UINT64, std::string &data)
         {
             string d("");
             for (const auto &data : cd.dataVec)
