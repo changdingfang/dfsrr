@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:51:06
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-22 20:51:52
+// ModifyDate:   2020-10-23 18:53:00
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -27,10 +27,12 @@ void help()
     printf("Options:\n");
     printf("\t-w / --watch\t打印最近的n条数据:\tdfsrrTool --cpu -w 10\n");
     printf("\t-l / --live\t实时打印:\t\tdfsrrTool --cpu -l\n");
-    printf("\t-i / --interval\t指定时间间隔:\t\tdfsrrTool --cpu -l -i 5\n");
+    printf("\t-i / --interval\t指定时间间隔(s):\tdfsrrTool --cpu -l -i 5\n");
     printf("\t-t / --time\t打印指定时间数据:\tdfsrrTool --cpu -t 20201001\n");
     printf("\t\t\t\t\t\tdfsrrTool --cpu -t 2020100108\n");
     printf("\t\t\t\t\t\tdfsrrTool --cpu -t 202010010800\n");
+    printf("\t-f / --file\t从文件中读取数据:\tdfsrrTool --cpu -f filename\n");
+    printf("\t-s / --spec\t指定显示指标字段:\tdfsrrTool --cpu -s util,sys,user\n");
     printf("\t-h / --help\t帮助\n");
 
     printf("Modules:\n");
@@ -67,17 +69,15 @@ int parseParam(int argc, char **argv, struct ModuleConfig_T &cfg)
         {
             cfg.printMode = PRINT_LIVE;
         }
+        else if (flag == "w" || flag == "watch")
+        {
+            cfg.printMode = PRINT_LAST_N_DATA;
+        }
         else if (flag == "cpu" || flag == "memory" || flag == "mem" || flag == "load"
                  || flag == "partition" || flag == "tcp" || flag == "udp" || flag == "traffic")
         {
             cfg.name = flag;
         }
-    }
-
-    if (cfg.name.empty())
-    {
-        printf("请带上正确的module参数\n");
-        exit(-1);
     }
 
     for (const auto &param : cmdl.params())
@@ -97,6 +97,28 @@ int parseParam(int argc, char **argv, struct ModuleConfig_T &cfg)
             cfg.printMode = PRINT_LAST_N_DATA;
             cfg.lastN = stoul(param.second);
         }
+        else if (param.first== "f" || param.first == "file")
+        {
+            cfg.filename = param.second;
+        }
+        else if (param.first== "s" || param.first == "spec")
+        {
+            string::size_type posS = 0, posE = -1;
+            while (posS != string::npos)
+            {
+                posS = posE;
+                posE = param.second.find_first_of(',', posS + 1);
+                string metric = param.second.substr(posS + 1, posE - posS - 1);
+                cfg.filter.insert(metric);
+                posS = posE;
+            }
+        }
+    }
+
+    if (cfg.name.empty())
+    {
+        printf("请带上正确的module参数\n");
+        exit(-1);
     }
 
     return 0;

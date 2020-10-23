@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:25:08
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-22 18:50:58
+// ModifyDate:   2020-10-23 18:53:15
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __RUN_MODULE_H__
@@ -12,8 +12,14 @@
 #include "common/type.h"
 #include "dfsrrModule.h"
 
+#include <unordered_set>
+
 namespace dfssrTool
 {
+
+    static std::string DataDir = "/home/dfsrr/dfsrr/data";
+    static const int DLine = 15;
+    typedef std::map<time_t, mod::CollectData_T, std::less<time_t>> ModData_t;
 
 
     enum PRINT_MODE_E
@@ -27,9 +33,13 @@ namespace dfssrTool
 
     struct ModuleConfig_T
     {
-        PRINT_MODE_E printMode;
-        std::string name;
-        std::string specifieTime;
+        PRINT_MODE_E printMode   { PRINT_NULL };
+        std::string name         { "" };
+        std::unordered_set<std::string> filter;
+
+
+        std::string specifieTime { "" };
+        std::string filename     { "" };
         UINT64 lastN { 1 };
         int interval { 1 };
     };
@@ -41,9 +51,13 @@ namespace dfssrTool
         int run();
 
     private:
+        int dealConfig();
         void printLastNData();
         void printDateDate();
         void printLiveData();
+        void defaultPrint();
+
+        void printModData(const ModData_t &modData);
 
         void printHead(const mod::CollectData_T &cd);
         void printValue(const mod::CollectData_T &cd, const std::string &ts);
@@ -51,6 +65,15 @@ namespace dfssrTool
         void formatHead(const std::string &metric, std::string &optLine, std::string &headStr);
         void formatTag(const std::string &value, std::string &valueStr);
         void formatValue(double value, std::string &valueStr);
+
+        inline bool checkFilter(const std::string &key) const
+        {
+            if (config_.filter.size() == 0)
+            {
+                return true;
+            }
+            return config_.filter.find(key) != config_.filter.end();
+        }
 
 
     private:
