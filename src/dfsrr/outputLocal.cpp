@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 20:47:17
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-22 19:36:18
+// ModifyDate:   2020-10-24 13:57:33
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -18,7 +18,6 @@ namespace dfsrr
 
     OutputLocal::OutputLocal(std::string datadir)
         : datadir_(datadir)
-          , maxSize_(2048)
     {
     }
 
@@ -60,48 +59,17 @@ namespace dfsrr
     }
 
 
-    int OutputLocal::addData(const std::string &name, UINT64 ts, const std::string &data)
+    int OutputLocal::send(const OutputData_T &od)
     {
-        LocalData_T ld;
-        ld.name         = name;
-        ld.timestamp    = ts;
-        ld.data         = data;
-
-        std::unique_lock<std::mutex> lock(mutex_);
-        if (dataQueue_.size() > maxSize_)
-        {
-            LOG(WARN, "queue full, discard data!");
-            return -1;
-        }
-        dataQueue_.push(ld);
-
-        return 0;
-    }
-
-
-    int OutputLocal::sendData()
-    {
-        LocalData_T ld;
-        {
-            std::unique_lock<std::mutex> lock(mutex_);
-            if (dataQueue_.empty())
-            {
-                // LOG(DEBUG, "data queue is empty...");
-                return 0;
-            }
-            ld = dataQueue_.front();
-            dataQueue_.pop();
-        }
-
         /* * * * * * * * * * * * * * * * * */
         /* 数据按天循环存储, 后面需要补充 */
         /* * * * * * * * * * * * * * * * * */
 
 
         string filename(datadir_);
-        filename += "/" + ld.name + ".db";
+        filename += "/" + od.name + ".db";
 
-        string sql(ld.data);
+        string sql(od.data);
         try
         {
             Database db(filename);
@@ -116,7 +84,7 @@ namespace dfsrr
                 {
                     if (errCount-- && !errMsg.compare(0, 14, "no such table:"))
                     {
-                        if (!this->createTable(ld.name + tableSuffix, sql, db))
+                        if (!this->createTable(od.name + tableSuffix, sql, db))
                         {
                             continue;
                         }

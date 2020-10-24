@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-13 19:15:37
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-13 21:18:16
+// ModifyDate:   2020-10-23 19:33:21
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __TYPE_H__
@@ -12,5 +12,8 @@
 typedef unsigned long long  UINT64;
 typedef unsigned int        UINT32;
 
+typedef int Socket_t;
+#define INVALID_SOCKET (-1)
+#define SOCKET_ERROR (-1)
 
 #endif /* __TYPE_H__ */

@@ -3,12 +3,13 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:14:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-22 19:35:14
+// ModifyDate:   2020-10-24 16:09:07
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dfsrr/dfsrr.h"
 #include "common/common.h"
 #include "dfsrr/outputLocal.h"
+#include "dfsrr/outputTcp.h"
 
 #include <unistd.h>
 
@@ -75,31 +76,47 @@ namespace dfsrr
 
         for (const auto &output : confJson["output"])
         {
-            LOG(DEBUG, "{}", output["type"]);
-            if (output["type"] == "local")
+            try
             {
-                config_.outputLocal = { true, output["pathdir"] };
-                common::createDir(config_.outputLocal.pathdir);
-                outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir));
+                LOG(INFO, "output type: [{}]", output.at("type"));
+                if (output.at("type") == "local")
+                {
+                    config_.outputLocal = { true, output.at("pathdir") };
+                    common::createDir(config_.outputLocal.pathdir);
+                    outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir));
+                }
+                else if (output.at("type") == "tcp")
+                {
+                    config_.outputTcp = { true, output.at("addr"), output.at("port") };
+                    outputVec_.push_back(make_shared<OutputTcp>(config_.outputTcp.addr, config_.outputTcp.port));
+                }
             }
-            else if (output["type"] == "tcp")
+            catch(...)
             {
-                config_.outputTcp = { true, output["addr"], output["port"] };
-                /* */
+                LOG(WARN, "not found output type!");
+                continue;
             }
         }
 
         for (const auto &mod : confJson["module"])
         {
-            moduleVec_.push_back(
-                    { 
-                    make_shared<DfSrrModule>(mod["module"])
-                    , mod["module"]
-                    , mod["name"]
-                    , mod["interval"]
-                    , mod["filter"]
-                    , 0 
-                    });
+            try
+            {
+                moduleVec_.push_back(
+                        {
+                        make_shared<DfSrrModule>(mod.at("module"))
+                        , mod.at("module")
+                        , mod.at("name")
+                        , mod.at("interval")
+                        , mod.at("filter")
+                        , 0 
+                        });
+            }
+            catch(...)
+            {
+                LOG(WARN, "have module failed!");
+                continue;
+            }
         }
 
         return true;

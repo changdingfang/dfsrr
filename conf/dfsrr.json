@@ -1,7 +1,7 @@
 {
     "log" :
     {
-        "file" : "/home/dingfang/work/dfsrr/build/dfsrr.log",
+        "file" : "/home/dfsrr/dfsrr/dfsrr.log",
         "//output" : "[console, file]",
         "output" : ["file"],
         "//log level" : "debug, info, warn, error, critical",
@@ -11,12 +11,12 @@
     [
         {
             "type" : "local",
-            "pathdir" : "/home/dingfang/work/dfsrr/build/data"
+            "pathdir" : "/home/dfsrr/dfsrr/data"
         },
         {
             "type" : "tcp",
             "addr" : "127.0.0.1",
-            "port" : 39999
+            "port" : 4999
         }
     ],
     "module":
