@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-24 10:53:41
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-24 16:16:07
+// ModifyDate:   2020-10-25 22:38:51
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -22,11 +22,17 @@ namespace dfsrr
     OutputTcp::OutputTcp(const std::string &addr, unsigned short port)
     {
         struct SockConf_T sc = { addr, port, 1 };
-        pNet_ = new Network();
-        if (!pNet_ || pNet_->connect(sc))
+        try
         {
-            delete pNet_;
-            pNet_ = nullptr;
+            netPtr_ = make_shared<Network>(Network());
+        }
+        catch(...)
+        {
+            throw;
+        }
+
+        if (netPtr_->connect(sc))
+        {
             throw("connect server failed!");
         }
     }
@@ -34,11 +40,6 @@ namespace dfsrr
 
     OutputTcp::~OutputTcp()
     {
-        if (pNet_)
-        {
-            delete pNet_;
-            pNet_ = nullptr;
-        }
     }
 
 
@@ -77,13 +78,12 @@ namespace dfsrr
         // string data(jdata.dump(4));
         string data(jdata.dump());
 
-        if (pNet_->send(data.c_str(), data.size()) < 0)
+        if (netPtr_->send(data.c_str(), data.size()) <= 0)
         {
             LOG(WARN, "send data failed!");
             return -1;
         }
                 
-
         return 0;
     }
 

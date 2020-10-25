@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:08:11
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-21 18:52:50
+// ModifyDate:   2020-10-25 22:43:02
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_H__
@@ -54,7 +54,9 @@ namespace dfsrr
     {
         OutputLocal_T   outputLocal;
         OutputTcp_T     outputTcp;
-        UINT32 intv;    /* us */
+        UINT32  intv { 10 * 1000 };    /* us */
+        int     checkOutputIntv_ { 10 }; /* s */
+
     };
 
 
@@ -73,6 +75,8 @@ namespace dfsrr
 
         static int sendData(Dfsrr *p);
 
+        bool checkOutput();
+
     private:
         bool stop_;
         DfsrrConfig_T config_;
@@ -81,11 +85,12 @@ namespace dfsrr
         std::vector< std::shared_ptr<Output> > outputVec_;
 
         std::shared_ptr<std::thread> sendThreadPtr_;
+
+        time_t lastCheckTime_;
     };
 
 
 }; /* dfsrr namespace end */
-
 
 
 #endif /* __DFSRR_H__ */

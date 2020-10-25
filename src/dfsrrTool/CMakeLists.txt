@@ -10,4 +10,4 @@ link_directories(${DEP_LIB})
 
 
 add_executable(dfsrrTool ${SOURCE_FILES})
-target_link_libraries(dfsrrTool dfmodule dflog fmt common)
+target_link_libraries(dfsrrTool dfmodule dflog fmt common pthread)

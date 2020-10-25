@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:14:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-24 16:09:07
+// ModifyDate:   2020-10-25 22:47:06
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dfsrr/dfsrr.h"
@@ -24,6 +24,8 @@ namespace dfsrr
     Dfsrr::Dfsrr(json conf)
         : stop_(false)
           , config_()
+          , lastCheckTime_(0)
+
     {
         if (!this->parseConfig(conf))
         {
@@ -62,6 +64,7 @@ namespace dfsrr
                     // LOG(DEBUG, "data: [{}]", data);
                     output->addData(cd.moduleName, mod.lastTime, data);
                 }
+                this->checkOutput();
             }
             ::usleep(config_.intv);
         }
@@ -72,8 +75,6 @@ namespace dfsrr
 
     bool Dfsrr::parseConfig(const json &confJson)
     {
-        config_.intv = 10 * 1000;
-
         for (const auto &output : confJson["output"])
         {
             try
@@ -134,14 +135,68 @@ namespace dfsrr
 
         while (!p->isStop())
         {
-            for (auto &output : p->outputVec_)
+            auto it = p->outputVec_.begin();
+            for ( ; it != p->outputVec_.end(); )
             {
-                output->sendData();
+                if ((*it)->sendData() != 0)
+                {
+                    it = p->outputVec_.erase(it);
+                    continue;
+                }
+                ++it;
             }
             ::usleep(p->config_.intv * 3);
         }
 
         return 0;
+    }
+
+    bool Dfsrr::checkOutput()
+    {
+        time_t nowTime = ::time(nullptr);
+
+        if (nowTime - lastCheckTime_ < config_.checkOutputIntv_)
+        {
+            return true;
+        }
+
+        lastCheckTime_ = nowTime;
+        bool local = false, tcp = false;
+
+        for (const auto &op : outputVec_)
+        {
+            if (config_.outputLocal.use && dynamic_cast<OutputLocal *>(op.get()) != nullptr)
+            {
+                local = true;
+            }
+
+            if (config_.outputTcp.use && dynamic_cast<OutputTcp *>(op.get()) != nullptr)
+            { 
+                tcp = true;
+            }
+        }
+
+        if (config_.outputLocal.use && !local)
+        {
+            LOG(WARN, "use local output, but output local ptr failed!, pathDir: [{}]", config_.outputLocal.pathdir);
+            common::createDir(config_.outputLocal.pathdir);
+            outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir));
+        }
+
+        if (config_.outputTcp.use && !tcp)
+        {
+            try
+            {
+                LOG(WARN, "use tcp output, but output tcp ptr failed!, addr: [{}], port: [{}]"
+                        , config_.outputTcp.addr
+                        , config_.outputTcp.port);
+                outputVec_.push_back(make_shared<OutputTcp>(config_.outputTcp.addr, config_.outputTcp.port));
+            }
+            catch(...) { };
+        }
+        LOG(INFO, "output vec.size: [{}]", outputVec_.size());
+
+        return true;
     }
 
 

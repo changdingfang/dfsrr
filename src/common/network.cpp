@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-23 18:54:49
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-24 16:05:25
+// ModifyDate:   2020-10-25 22:24:07
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -21,8 +21,10 @@ namespace common
 
     Network::Network()
     {
-        this->createSocket();
-        this->setSockOpt();
+        if (this->createSocket() != 0 || this->setSockOpt() != 0)
+        {
+            throw("create net failed!");
+        }
     }
 
 
@@ -87,7 +89,8 @@ namespace common
 
         do
         {
-            size = ::send(this->socket(), buff + sendLen, len - sendLen, 0);
+            // size = ::send(this->socket(), buff + sendLen, len - sendLen, 0);
+            size = ::send(this->socket(), buff + sendLen, len - sendLen, MSG_NOSIGNAL);
             if (size > 0)
             {
                 sendLen += size;
