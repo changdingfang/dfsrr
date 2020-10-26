@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-24 10:53:41
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-25 22:38:51
+// ModifyDate:   2020-10-26 21:07:22
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -17,6 +17,39 @@ using json = nlohmann::json;
 
 namespace dfsrr
 {
+
+
+    std::string TcpPackage_T::serializa()
+    {
+        char buff[PkgLen] = { 0 };
+        ::memcpy(buff, &type, 4);
+        ::memcpy(buff + 4, &size, 4);
+
+        std::string s;
+        s.assign(buff, PkgLen);
+        s += msg;
+
+        return std::move(s);
+    }
+
+
+    bool TcpPackage_T::deserializa(const std::string &data)
+    {
+        if (data.size() < PkgLen)
+        {
+            LOG(WARN, "deserializa data failed!");
+            return false;
+        }
+        ::memcpy(&type, data.data(), 4);
+        ::memcpy(&size, data.data() + 4, 4);
+        msg = data.substr(PkgLen, size);
+        
+        return true;
+    }
+
+
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
     OutputTcp::OutputTcp(const std::string &addr, unsigned short port)
@@ -75,10 +108,13 @@ namespace dfsrr
         jdata["module"]    = od.name;
         jdata["data"]      = json::parse(od.data);
         jdata["timestamp"] = od.timestamp;
-        // string data(jdata.dump(4));
-        string data(jdata.dump());
+        string data(jdata.dump(4));
+        // string data(jdata.dump());
 
-        if (netPtr_->send(data.c_str(), data.size()) <= 0)
+        TcpPackage_T th { Protocol_E::MODULE_DATA, static_cast<UINT32>(data.size()), data };
+        string msg(std::move(th.serializa()));
+
+        if (netPtr_->send(msg.c_str(), msg.size()) <= 0)
         {
             LOG(WARN, "send data failed!");
             return -1;

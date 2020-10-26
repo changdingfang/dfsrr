@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:57:36
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-21 18:53:04
+// ModifyDate:   2020-10-26 21:07:07
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -44,7 +44,16 @@ bool parseConfig(const string &confFile, json &confJson)
 
     fin.close();
 
-    confJson = json::parse(configContent);
+    try
+    {
+        confJson = json::parse(configContent);
+    }
+    catch (json::exception &e)
+    {
+        // printf("parse json config file failed! error: [%s], id: [%d]\n", e.what(), e.id);
+        printf("parse json config file failed!\n");
+        return false;
+    }
 
     return true;
 }

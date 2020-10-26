@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-24 10:49:15
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-25 20:22:03
+// ModifyDate:   2020-10-26 21:07:28
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __OUTPUT_TCP_H__
@@ -18,6 +18,25 @@ namespace dfsrr
 {
 
 
+    static const int PkgLen = 8;
+
+    enum Protocol_E
+    {
+        MODULE_DATA = 5,
+    };
+
+
+    struct TcpPackage_T
+    {
+        UINT32 type;
+        UINT32 size;
+        std::string msg;
+
+        bool deserializa(const std::string &data);
+        std::string serializa();
+    };
+
+
     class OutputTcp final
         : public Output
     {
@@ -26,6 +45,8 @@ namespace dfsrr
         virtual ~OutputTcp();
 
         virtual int convert(const mod::CollectData_T &, UINT64 timestamp,  std::string &) override;
+
+    private:
         virtual int send(const OutputData_T &od) override;
 
     private:

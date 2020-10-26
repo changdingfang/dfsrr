@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:14:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-25 22:47:06
+// ModifyDate:   2020-10-26 21:06:50
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dfsrr/dfsrr.h"
@@ -77,25 +77,46 @@ namespace dfsrr
     {
         for (const auto &output : confJson["output"])
         {
-            try
-            {
-                LOG(INFO, "output type: [{}]", output.at("type"));
-                if (output.at("type") == "local")
-                {
-                    config_.outputLocal = { true, output.at("pathdir") };
-                    common::createDir(config_.outputLocal.pathdir);
-                    outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir));
-                }
-                else if (output.at("type") == "tcp")
-                {
-                    config_.outputTcp = { true, output.at("addr"), output.at("port") };
-                    outputVec_.push_back(make_shared<OutputTcp>(config_.outputTcp.addr, config_.outputTcp.port));
-                }
-            }
-            catch(...)
+            auto it = output.find("type");
+            if (it == output.end())
             {
                 LOG(WARN, "not found output type!");
                 continue;
+            }
+
+            LOG(INFO, "output type: [{}]", *it);
+
+            if (*it == "local")
+            {
+                auto pathdirIt = output.find("pathdir");
+                if (pathdirIt == output.end())
+                {
+                    LOG(WARN, "local pathdir config failed!");
+                    continue;
+                }
+                config_.outputLocal = { true, *pathdirIt };
+                common::createDir(config_.outputLocal.pathdir);
+                outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir));
+            }
+            else if (*it == "tcp")
+            {
+                auto addrIt = output.find("addr");
+                auto portIt = output.find("port");
+                if (addrIt == output.end() || portIt == output.end())
+                {
+                    LOG(WARN, "tcp config failed!");
+                    continue;
+                }
+                config_.outputTcp = { true, *addrIt, *portIt };
+
+                try
+                {
+                    outputVec_.push_back(make_shared<OutputTcp>(config_.outputTcp.addr, config_.outputTcp.port));
+                }
+                catch (const char *e)
+                {
+                    LOG(WARN, "new output tcp failed! error: [{}]", e);
+                }
             }
         }
 
@@ -150,6 +171,7 @@ namespace dfsrr
 
         return 0;
     }
+
 
     bool Dfsrr::checkOutput()
     {
