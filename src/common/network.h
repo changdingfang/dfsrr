@@ -3,55 +3,59 @@
 // Author:       dingfang
 // CreateDate:   2020-10-23 18:49:31
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-24 14:29:19
+// ModifyDate:   2020-10-27 21:33:02
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __NETWORK_H__
 #define __NETWORK_H__
 
 #include "common/type.h"
+#include "event2/bufferevent.h"
 
 #include <string>
+#include <thread>
+#include <memory>
 
 
 namespace common
 {
 
+    typedef void (* pFn)(std::string);
 
     struct SockConf_T
     {
         std::string         addr;
         unsigned short int  port;
         int                 timeout;
+        pFn                 recvData;
     };
 
 
     class Network
     {
     public:
-        Network();
+        Network(const SockConf_T &sc);
         ~Network();
 
-        Socket_t socket() const { return socket_; }
+        static int loop(Network *pNet);
+        void loopExit();
 
-        int server(SockConf_T &sc);
-        int connect(SockConf_T &sc);
+        int server();
+        int connect();
 
         int send(const char *buff, int len);
         int recv(char *buff, int len);
 
-        int setSockOpt();
-        int setScokTimeout(int timeout);
+    private:
+        static void recvCB(struct bufferevent *bev, void *arg);
+        // static void sendCB();
+        static void eventCB(struct bufferevent *bev, short event, void *arg);
 
     private:
-        int createSocket();
-        int bind(SockConf_T &sc);
-        int listen(int backlog);
-        int accept(Network net);
-        int close();
-
-    private:
-        Socket_t socket_;
+        SockConf_T          sc_;
+        bufferevent         *bev_;
+        struct event_base   *base_ ;
+        std::unique_ptr<std::thread> loopPtr_;
     };
 
 

@@ -3,81 +3,132 @@
 // Author:       dingfang
 // CreateDate:   2020-10-23 18:54:49
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-25 22:24:07
+// ModifyDate:   2020-10-27 21:32:37
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
 #include "network.h"
 
-#include <stdint.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+
+#include "event.h"
+#include "event2/bufferevent.h"
+#include "event2/buffer.h"
+#include "event2/util.h"
+#include "event2/thread.h"
+
+using namespace std;
 
 namespace common
 {
 
 
-    Network::Network()
+    Network::Network(const SockConf_T &sc)
+        : sc_(sc)
+          , bev_(nullptr)
+          , base_(nullptr)
     {
-        if (this->createSocket() != 0 || this->setSockOpt() != 0)
-        {
-            throw("create net failed!");
-        }
+        LOG(DEBUG, "Network init....");
     }
 
 
     Network::~Network()
     {
-        this->close();
+        this->loopExit();
+        LOG(DEBUG, "~Network");
+
+        if (base_)
+        {
+            LOG(DEBUG, "~Network::free base");
+            event_base_free(base_);
+            base_ = nullptr;
+        }
+
+        if (loopPtr_)
+        {
+            LOG(DEBUG, "~Network::loop thread join");
+            loopPtr_->join();
+        }
     }
 
 
-    int Network::server(SockConf_T &sc)
+    int Network::server()
     {
-        this->bind(sc);
-        this->listen(10);
+        return 0;
+    }
+
+
+    int Network::loop(Network *pNet)
+    {
+        LOG(DEBUG, "loop start!");
+        if (!pNet || pNet->base_ == nullptr)
+        {
+            LOG(ERROR, "base is null");
+            return -1;
+        }
+        event_base_dispatch(pNet->base_);
+        /// event_base_loop(pNet->base_, EVLOOP_NO_EXIT_ON_EMPTY);
+        LOG(DEBUG, "loop end!");
 
         return 0;
     }
 
 
-    int Network::connect(SockConf_T &sc)
+    void Network::loopExit()
     {
-        if (sc.timeout) 
+        // ::event_base_loopexit(base_, nullptr);
+        ::event_base_loopbreak(base_);
+    }
+
+
+    int Network::connect()
+    {
+        if (::evthread_use_pthreads() != 0)
         {
-            // this->setScokTimeout(sc.timeout);
-            struct timeval timeset;
-            timeset.tv_sec = 1;
-            timeset.tv_usec = 0;
-            if (::setsockopt(this->socket()
-                        , SOL_SOCKET
-                        , SO_SNDTIMEO
-                        , (char *)(&timeset)
-                        , sizeof(timeset)) != 0) 
-            {
-                LOG(ERROR, "setsockopt error: [{}], [{}]", errno, strerror(errno));
-                return -1;
-            } 
+            LOG(WARN, "use pthread failed!");
+            return -1;
         }
 
-        struct sockaddr_in serverAddr;
-        serverAddr.sin_family       = AF_INET;
-        serverAddr.sin_addr.s_addr  = ::inet_addr(sc.addr.c_str());
-        serverAddr.sin_port         = ::htons(sc.port);
-        if (::connect(this->socket()
-                    , (struct sockaddr *)(&serverAddr)
-                    , sizeof(serverAddr)) != 0) 
+        struct event_base *base = ::event_base_new();
+        if (base == nullptr)
         {
-            if (errno == EINPROGRESS) 
-            {
-                LOG(ERROR, "server addr: [{}], port: [{}] is connecting", sc.addr, sc.port);
-                return -1;
-            } 
-            LOG(ERROR, "error: [{}], [{}], addr: [{}], port: [{}]", errno, strerror(errno), sc.addr, sc.port);
+            LOG(WARN, "network init failed!");
             return -1;
-        } 
+        }
+
+        struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+        if (bev == nullptr)
+        {
+            LOG(ERROR, "buffer event is null!");
+            return -1;
+        }
+
+        struct sockaddr_in si;
+        si.sin_family = AF_INET;
+        si.sin_port = htons(sc_.port);
+        ::inet_aton(sc_.addr.c_str(), &si.sin_addr);
+
+        if (::bufferevent_socket_connect(bev, (struct sockaddr *)&si, sizeof(si)) != 0)
+        {
+            LOG(ERROR, "connect server failed!");
+            return -1;
+        }
+
+        ::bufferevent_setcb(bev, Network::recvCB, nullptr, Network::eventCB, (void *)this);
+        if (::bufferevent_enable(bev, EV_READ | EV_PERSIST) != 0)
+        {
+            LOG(ERROR, "enable event failed!");
+            return -1;
+        }
+
+        bev_ = bev;
+        base_ = base;
+
+        LOG(DEBUG, "connect successful!");
+
+        loopPtr_ = unique_ptr<std::thread>(new thread(Network::loop, this));
 
         return 0;
     }
@@ -85,34 +136,19 @@ namespace common
 
     int Network::send(const char *buff, int len)
     {
-        int sendLen = 0, size = 0;
-
-        do
+        if (bev_ == nullptr)
         {
-            // size = ::send(this->socket(), buff + sendLen, len - sendLen, 0);
-            size = ::send(this->socket(), buff + sendLen, len - sendLen, MSG_NOSIGNAL);
-            if (size > 0)
-            {
-                sendLen += size;
-            }
-        } while (size > 0 && sendLen < len);
-
-        if (size < 0)
-        {
-            LOG(ERROR, "send data error: [{}], [{}]", errno, strerror(errno));
-            if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)
-            {
-                return size;
-            }
+            LOG(ERROR, "send:: buffer event is null!");
+            return -1;
         }
-
-        return sendLen;
+        return ::bufferevent_write(bev_, buff, len);
     }
 
 
     int Network::recv(char *buff, int len)
     {
-        int size = ::recv(this->socket(), buff, len, 0);
+        int size = 0;
+        // int size = ::recv(this->socket(), buff, len, 0);
 
         if (size > 0)
         {
@@ -133,51 +169,50 @@ namespace common
     }
 
 
-    int Network::setSockOpt()
+    void Network::eventCB(struct bufferevent *bev, short event, void *arg)
     {
-        return 0;
-    }
-
-
-    int Network::setScokTimeout(int timeout)
-    {
-        return 0;
-    }
-
-
-    int Network::createSocket()
-    {
-        socket_ = ::socket(AF_INET, SOCK_STREAM, 0);
-        if (socket_ == INVALID_SOCKET) 
+        if (event & BEV_EVENT_EOF)
         {
-            LOG(ERROR, "create socket error: [{}], [{}]", errno, strerror(errno));
-            return -1;
-        } 
-        return 0;
+            LOG(WARN, "connection closed");
+        }
+        else if (event & BEV_EVENT_ERROR)
+        {
+            LOG(ERROR, "some other error!");
+        }
+        else if (event & BEV_EVENT_CONNECTED)
+        {
+            LOG(WARN, "the client has connected to server");
+            return ;
+        }
+        else
+        {
+            LOG(INFO, "event callback other....");
+        }
+
+        Network *pNet = reinterpret_cast<Network *>(arg);
+        ::bufferevent_free(pNet->bev_);
+        pNet->bev_ = nullptr;
+        LOG(DEBUG, "event callback!");
     }
 
 
-    int Network::bind(SockConf_T &sc)
+    void Network::recvCB(struct bufferevent *bev, void *arg)
     {
-        return 0;
-    }
+        LOG(INFO, "recv....!");
+        char data[2048] = { 0 };
+        size_t len = bufferevent_read(bev, data, sizeof(data));
 
+        Network *pNet = reinterpret_cast<Network *>(arg);
+        if (pNet && pNet->sc_.recvData != nullptr)
+        {
+            pNet->sc_.recvData(string(data, len));
+        }
+        else
+        {
+            LOG(WARN, "recvCB: arg is null");
+        }
 
-    int Network::listen(int backlog)
-    {
-        return 0;
-    }
-
-
-    int Network::accept(Network net)
-    {
-        return 0;
-    }
-
-
-    int Network::close()
-    {
-        return 0;
+        return ;
     }
 
 

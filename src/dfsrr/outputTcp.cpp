@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-24 10:53:41
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-26 21:07:22
+// ModifyDate:   2020-10-27 21:35:33
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -54,25 +54,28 @@ namespace dfsrr
 
     OutputTcp::OutputTcp(const std::string &addr, unsigned short port)
     {
-        struct SockConf_T sc = { addr, port, 1 };
+        struct SockConf_T sc = { addr, port, 1, nullptr };
         try
         {
-            netPtr_ = make_shared<Network>(Network());
+            LOG(DEBUG, "OutputTcp ...");
+            netPtr_ = unique_ptr<Network>(new Network(sc));
+            if (netPtr_->connect())
+            {
+                LOG(WARN, "connect failed!");
+                throw("connect server failed!");
+            }
         }
         catch(...)
         {
+            LOG(WARN, "OutputTcp: init network failed!");
             throw;
-        }
-
-        if (netPtr_->connect(sc))
-        {
-            throw("connect server failed!");
         }
     }
 
 
     OutputTcp::~OutputTcp()
     {
+        LOG(DEBUG, "~OutputTcp");
     }
 
 
@@ -114,7 +117,7 @@ namespace dfsrr
         TcpPackage_T th { Protocol_E::MODULE_DATA, static_cast<UINT32>(data.size()), data };
         string msg(std::move(th.serializa()));
 
-        if (netPtr_->send(msg.c_str(), msg.size()) <= 0)
+        if (netPtr_->send(msg.c_str(), msg.size()) < 0)
         {
             LOG(WARN, "send data failed!");
             return -1;

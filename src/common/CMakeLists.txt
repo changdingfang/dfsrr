@@ -4,9 +4,11 @@ aux_source_directory(. SOURCE_FILES)
 
 include_directories(${ROOT_DIRECTORY}/src)
 include_directories(${DEP_INCLUDE})
+include_directories(${DEP_INCLUDE}/libevent)
 
 link_directories(${DEP_LIB})
+link_directories(${DEP_LIB}/libevent)
 
 
 add_library(common STATIC ${SOURCE_FILES})
-target_link_libraries(common dflog fmt sqlite3)
+target_link_libraries(common dflog fmt sqlite3 libevent.a libevent_pthreads.a)

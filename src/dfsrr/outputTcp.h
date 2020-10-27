@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-24 10:49:15
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-26 21:07:28
+// ModifyDate:   2020-10-27 21:15:24
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __OUTPUT_TCP_H__
@@ -50,7 +50,7 @@ namespace dfsrr
         virtual int send(const OutputData_T &od) override;
 
     private:
-        std::shared_ptr<common::Network> netPtr_;
+        std::unique_ptr<common::Network> netPtr_;
     };
 
 
