@@ -11,4 +11,4 @@ link_directories(${DEP_LIB}/libevent)
 
 
 add_library(common STATIC ${SOURCE_FILES})
-target_link_libraries(common dflog fmt sqlite3 libevent.a libevent_pthreads.a)
+target_link_libraries(common dflog fmt libsqlite3.a dl libevent.a libevent_pthreads.a)
