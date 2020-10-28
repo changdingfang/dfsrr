@@ -17,6 +17,7 @@ message(STATUS "DEP_LIB: ${DEP_LIB}")
 
 add_subdirectory(src/common)
 add_subdirectory(src/dfsrr)
+add_subdirectory(src/dfsrrServer)
 add_subdirectory(src/dfsrrTool)
 add_subdirectory(module)
 add_subdirectory(tests)

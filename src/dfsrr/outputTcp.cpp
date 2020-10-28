@@ -3,53 +3,22 @@
 // Author:       dingfang
 // CreateDate:   2020-10-24 10:53:41
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-27 21:35:33
+// ModifyDate:   2020-10-28 20:31:34
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
+#include "common/common.h"
 #include "dfsrr/outputTcp.h"
 #include "nlohmann/json.hpp"
 
 
 using namespace std;
 using namespace common;
+using namespace dfsrrProtocol;
 using json = nlohmann::json;
 
 namespace dfsrr
 {
-
-
-    std::string TcpPackage_T::serializa()
-    {
-        char buff[PkgLen] = { 0 };
-        ::memcpy(buff, &type, 4);
-        ::memcpy(buff + 4, &size, 4);
-
-        std::string s;
-        s.assign(buff, PkgLen);
-        s += msg;
-
-        return std::move(s);
-    }
-
-
-    bool TcpPackage_T::deserializa(const std::string &data)
-    {
-        if (data.size() < PkgLen)
-        {
-            LOG(WARN, "deserializa data failed!");
-            return false;
-        }
-        ::memcpy(&type, data.data(), 4);
-        ::memcpy(&size, data.data() + 4, 4);
-        msg = data.substr(PkgLen, size);
-        
-        return true;
-    }
-
-
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-    /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
     OutputTcp::OutputTcp(const std::string &addr, unsigned short port)
@@ -64,6 +33,8 @@ namespace dfsrr
                 LOG(WARN, "connect failed!");
                 throw("connect server failed!");
             }
+            common::gethostname(li_.hostname);
+            common::getip(li_.ipVec);
         }
         catch(...)
         {
@@ -108,9 +79,11 @@ namespace dfsrr
     {
         LOG(DEBUG, "output tcp send");
         json jdata;
-        jdata["module"]    = od.name;
-        jdata["data"]      = json::parse(od.data);
-        jdata["timestamp"] = od.timestamp;
+        jdata["module"]     = od.name;
+        jdata["data"]       = json::parse(od.data);
+        jdata["timestamp"]  = od.timestamp;
+        jdata["hostname"]   = li_.hostname;
+        jdata["ip"]         = li_.ipVec;
         string data(jdata.dump(4));
         // string data(jdata.dump());
 

@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-23 18:54:49
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-27 21:32:37
+// ModifyDate:   2020-10-28 20:32:55
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -14,7 +14,6 @@
 #include <netinet/in.h>
 
 #include "event.h"
-#include "event2/bufferevent.h"
 #include "event2/buffer.h"
 #include "event2/util.h"
 #include "event2/thread.h"
@@ -27,10 +26,23 @@ namespace common
 
     Network::Network(const SockConf_T &sc)
         : sc_(sc)
-          , bev_(nullptr)
+          , listener_(nullptr)
           , base_(nullptr)
     {
         LOG(DEBUG, "Network init....");
+        if (::evthread_use_pthreads() != 0)
+        {
+            LOG(WARN, "use pthread failed!");
+            throw("use pthread failed!");
+        }
+
+        struct event_base *base = ::event_base_new();
+        if (base == nullptr)
+        {
+            LOG(WARN, "network init failed!");
+            throw( "network init failed!");
+        }
+        base_ = base;
     }
 
 
@@ -38,6 +50,12 @@ namespace common
     {
         this->loopExit();
         LOG(DEBUG, "~Network");
+
+        if (listener_)
+        {
+            evconnlistener_free(listener_);
+            listener_ = nullptr;
+        }
 
         if (base_)
         {
@@ -51,12 +69,6 @@ namespace common
             LOG(DEBUG, "~Network::loop thread join");
             loopPtr_->join();
         }
-    }
-
-
-    int Network::server()
-    {
-        return 0;
     }
 
 
@@ -83,20 +95,49 @@ namespace common
     }
 
 
-    int Network::connect()
+    int Network::server()
     {
-        if (::evthread_use_pthreads() != 0)
+        struct event_base *base = base_;
+
+        int backlog = 10;
+
+        struct sockaddr_in si;
+        ::memset(&si, 0x00, sizeof(struct sockaddr_in));
+        si.sin_family   = AF_INET;
+        si.sin_port     = htons(sc_.port);
+
+        string method = event_base_get_method(base);
+        LOG(INFO, "method: [{}]", method);
+
+        evconnlistener *listener = ::evconnlistener_new_bind(base
+                , Network::listenerCB
+                , (void *)this
+                , LEV_OPT_REUSEABLE | LEV_OPT_CLOSE_ON_FREE | LEV_OPT_THREADSAFE
+                , backlog
+                , (struct sockaddr *)&si
+                , sizeof(struct sockaddr_in));
+
+        if (listener == nullptr)
         {
-            LOG(WARN, "use pthread failed!");
+            LOG(ERROR, "evconnlistener new bind failed!");
             return -1;
         }
 
-        struct event_base *base = ::event_base_new();
-        if (base == nullptr)
-        {
-            LOG(WARN, "network init failed!");
-            return -1;
-        }
+        ::evconnlistener_set_error_cb(listener, Network::acceptErrorCB);
+
+        listener_ = listener;
+
+        LOG(DEBUG, "server init successful");
+
+        loopPtr_ = unique_ptr<std::thread>(new thread(Network::loop, this));
+
+        return 0;
+    }
+
+
+    int Network::connect()
+    {
+        struct event_base *base = base_;
 
         struct bufferevent *bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
         if (bev == nullptr)
@@ -123,7 +164,7 @@ namespace common
             return -1;
         }
 
-        bev_ = bev;
+        this->insertBev(bev);
         base_ = base;
 
         LOG(DEBUG, "connect successful!");
@@ -136,36 +177,81 @@ namespace common
 
     int Network::send(const char *buff, int len)
     {
-        if (bev_ == nullptr)
+        if (bevSet_.size() == 0)
         {
             LOG(ERROR, "send:: buffer event is null!");
             return -1;
         }
-        return ::bufferevent_write(bev_, buff, len);
+
+        for (auto bev : bevSet_)
+        {
+            if (::bufferevent_write(bev, buff, len) != 0)
+            {
+                LOG(WARN, "buffer event write buff failed!");
+            }
+        }
+
+        return 0;
     }
 
 
-    int Network::recv(char *buff, int len)
+    void Network::listenerCB(evconnlistener *listener, evutil_socket_t fd, struct sockaddr *sock, int socklen, void *arg)
     {
-        int size = 0;
-        // int size = ::recv(this->socket(), buff, len, 0);
+        LOG(DEBUG, "accept a client [{}]", fd);
 
-        if (size > 0)
+        Network *pNet = reinterpret_cast<Network *>(arg);
+        event_base *base = pNet->base_;
+        // event_base *base = evconnlistener_get_base(listener);
+
+        bufferevent *bev = bufferevent_socket_new(base, fd, BEV_OPT_CLOSE_ON_FREE);
+
+        bufferevent_setcb(bev, Network::recvCB, nullptr, eventCB, arg);
+        bufferevent_enable(bev, EV_READ | EV_PERSIST | EV_ET);
+
+        pNet->insertBev(bev);
+
+        return ;
+    }
+
+
+    void Network::acceptErrorCB(struct evconnlistener *listener, void *ctx)
+    {
+        struct event_base *base = ::evconnlistener_get_base(listener);
+        int err = EVUTIL_SOCKET_ERROR();
+
+        LOG(ERROR, "error: [{}], [{}], shutdown!", err, evutil_socket_error_to_string(err));
+
+        ::event_base_loopexit(base, nullptr);
+    }
+
+
+    void Network::recvCB(struct bufferevent *bev, void *arg)
+    {
+        LOG(DEBUG, "recv....!");
+
+        Network *pNet = reinterpret_cast<Network *>(arg);
+        if (pNet && pNet->sc_.recvData != nullptr)
         {
-            LOG(DEBUG, "recv data size: [{}]", size);
+            evbuffer *inputBuffer = ::bufferevent_get_input(bev);
+            if (inputBuffer == nullptr)
+            {
+                LOG(WARN, "input buffer is null");
+                return ;
+            }
+
+            char data[2048] = { 0 };
+            do
+            {
+                size_t len = bufferevent_read(bev, data, sizeof(data));
+                pNet->sc_.recvData(string(data, len), to_string(std::hash<bufferevent *>{}(bev)));
+            } while (::evbuffer_get_length(inputBuffer) > 0);
         }
-        else if (size == 0) 
+        else
         {
-            LOG(INFO, "peer maybe has been closed gracefully");
-        } 
-        else if (size < 0) 
-        {
-            if (errno == EAGAIN || errno == EINTR)
-                return 0;
-            LOG(ERROR, "recv data error: [{}], [{}]", errno, strerror(errno));
-        } 
+            LOG(WARN, "recvCB: arg is null");
+        }
 
-        return size;
+        return ;
     }
 
 
@@ -190,29 +276,36 @@ namespace common
         }
 
         Network *pNet = reinterpret_cast<Network *>(arg);
-        ::bufferevent_free(pNet->bev_);
-        pNet->bev_ = nullptr;
+        ::bufferevent_free(bev);
+        pNet->eraseBev(bev);
         LOG(DEBUG, "event callback!");
     }
 
 
-    void Network::recvCB(struct bufferevent *bev, void *arg)
+    bool Network::insertBev(bufferevent *bev)
     {
-        LOG(INFO, "recv....!");
-        char data[2048] = { 0 };
-        size_t len = bufferevent_read(bev, data, sizeof(data));
-
-        Network *pNet = reinterpret_cast<Network *>(arg);
-        if (pNet && pNet->sc_.recvData != nullptr)
+        if (bevSet_.find(bev) != bevSet_.end())
         {
-            pNet->sc_.recvData(string(data, len));
+            return false;
         }
-        else
-        {
-            LOG(WARN, "recvCB: arg is null");
-        }
+        bevSet_.insert(bev);
 
-        return ;
+        return true;
+    }
+
+
+    bool Network::eraseBev(bufferevent *bev)
+    {
+        auto it = bevSet_.find(bev);
+        if (it == bevSet_.end())
+        {
+            LOG(INFO, "bev already erase!");
+            return false;
+        }
+        LOG(INFO, "bevSet find the bev.");
+        bevSet_.erase(it);
+
+        return true;
     }
 
 

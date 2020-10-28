@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-23 18:49:31
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-27 21:33:02
+// ModifyDate:   2020-10-28 20:32:47
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __NETWORK_H__
@@ -11,16 +11,18 @@
 
 #include "common/type.h"
 #include "event2/bufferevent.h"
+#include <event2/listener.h>
 
 #include <string>
 #include <thread>
 #include <memory>
+#include <set>
 
 
 namespace common
 {
 
-    typedef void (* pFn)(std::string);
+    typedef void (* pFn)(std::string, std::string);
 
     struct SockConf_T
     {
@@ -44,16 +46,21 @@ namespace common
         int connect();
 
         int send(const char *buff, int len);
-        int recv(char *buff, int len);
 
     private:
+        static void listenerCB(evconnlistener *listener, evutil_socket_t fd, struct sockaddr *sock, int socklen, void *arg);
+        static void acceptErrorCB(struct evconnlistener *listener, void *ctx);
         static void recvCB(struct bufferevent *bev, void *arg);
         // static void sendCB();
         static void eventCB(struct bufferevent *bev, short event, void *arg);
 
+        bool insertBev(bufferevent *bev);
+        bool eraseBev(bufferevent *bev);
+
     private:
         SockConf_T          sc_;
-        bufferevent         *bev_;
+        std::set<bufferevent *> bevSet_;
+        evconnlistener      *listener_;
         struct event_base   *base_ ;
         std::unique_ptr<std::thread> loopPtr_;
     };

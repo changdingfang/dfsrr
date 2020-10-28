@@ -11,7 +11,8 @@
     [
         {
             "type" : "local",
-            "pathdir" : "/home/dfsrr/dfsrr/data"
+            "pathdir" : "/home/dfsrr/dfsrr/data",
+            "rotateTime":  7
         },
         {
             "type" : "tcp",

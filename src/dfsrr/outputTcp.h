@@ -3,37 +3,27 @@
 // Author:       dingfang
 // CreateDate:   2020-10-24 10:49:15
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-27 21:15:24
+// ModifyDate:   2020-10-28 20:31:31
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __OUTPUT_TCP_H__
 #define __OUTPUT_TCP_H__
 
-#include "output.h"
+#include "dfsrr/output.h"
 #include "common/network.h"
+#include "dfsrr/protocol.h"
 
 #include <memory>
+#include <vector>
 
 namespace dfsrr
 {
 
 
-    static const int PkgLen = 8;
-
-    enum Protocol_E
+    struct LocalInfo_T
     {
-        MODULE_DATA = 5,
-    };
-
-
-    struct TcpPackage_T
-    {
-        UINT32 type;
-        UINT32 size;
-        std::string msg;
-
-        bool deserializa(const std::string &data);
-        std::string serializa();
+        std::string hostname;
+        std::vector<std::string> ipVec;
     };
 
 
@@ -51,6 +41,7 @@ namespace dfsrr
 
     private:
         std::unique_ptr<common::Network> netPtr_;
+        LocalInfo_T li_;
     };
 
 
