@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:08:11
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-26 21:06:48
+// ModifyDate:   2020-10-28 20:30:27
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_H__
@@ -39,6 +39,7 @@ namespace dfsrr
     {
         bool        use;
         std::string pathdir;
+        UINT64      rotate;
     };
 
 
@@ -64,7 +65,7 @@ namespace dfsrr
     {
     public:
         Dfsrr(nlohmann::json conf);
-        ~Dfsrr() { };
+        ~Dfsrr();
 
         void run();
         inline void stop() { stop_ = true; };

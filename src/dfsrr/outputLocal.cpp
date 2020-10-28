@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 20:47:17
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-24 13:57:33
+// ModifyDate:   2020-10-28 20:29:45
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -16,8 +16,10 @@ namespace dfsrr
 {
 
 
-    OutputLocal::OutputLocal(std::string datadir)
+    OutputLocal::OutputLocal(std::string datadir, UINT64 rotate)
         : datadir_(datadir)
+        , rotate_(rotate)
+        , lastTime_(::time(nullptr))
     {
     }
 
@@ -61,9 +63,12 @@ namespace dfsrr
 
     int OutputLocal::send(const OutputData_T &od)
     {
-        /* * * * * * * * * * * * * * * * * */
-        /* 数据按天循环存储, 后面需要补充 */
-        /* * * * * * * * * * * * * * * * * */
+        time_t nowTime = ::time(nullptr);
+        if (nowTime - lastTime_ > 3600 * 6)
+        {
+            lastTime_ = nowTime;
+            this->delOldData(od);
+        }
 
 
         string filename(datadir_);
@@ -134,6 +139,38 @@ namespace dfsrr
         LOG(INFO, "create sql: [{}]", sql);
 
         return db.execSql(sql);
+    }
+
+
+    void OutputLocal::delOldData(const OutputData_T &od)
+    {
+        string filename(datadir_);
+        filename += "/" + od.name + ".db";
+
+        string sql;
+        sql += "delete from " + od.name + tableSuffix;
+        sql += " where timestamp < " + to_string(lastTime_ - rotate_);
+        try
+        {
+            Database db(filename);
+            string errMsg;
+            int ret = 0;
+
+            do
+            {
+                ret = db.execSql(sql, nullptr, nullptr, errMsg);
+                if (ret)
+                {
+                    LOG(ERROR, "delete old data; exec sql error! sql: [{}]", sql);
+                    return ;
+                }
+            } while (ret);
+        }
+        catch (...)
+        {
+            LOG(ERROR, "write data failed! sql: [{}]", sql);
+            return ;
+        }
     }
 
 

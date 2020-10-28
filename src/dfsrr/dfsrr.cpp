@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:14:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-26 21:06:50
+// ModifyDate:   2020-10-28 20:30:16
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dfsrr/dfsrr.h"
@@ -34,10 +34,18 @@ namespace dfsrr
     }
 
 
+    Dfsrr::~Dfsrr()
+    {
+        this->stop();
+        if (sendThreadPtr_)
+        {
+            sendThreadPtr_->join();
+        }
+    }
+
+
     void Dfsrr::run()
     {
-        stop_ =  false;
-
         sendThreadPtr_ = make_shared<std::thread>(Dfsrr::sendData, this);
 
         while (!this->isStop())
@@ -68,8 +76,6 @@ namespace dfsrr
             }
             ::usleep(config_.intv);
         }
-
-        sendThreadPtr_->join();
     }
 
 
@@ -94,9 +100,16 @@ namespace dfsrr
                     LOG(WARN, "local pathdir config failed!");
                     continue;
                 }
-                config_.outputLocal = { true, *pathdirIt };
+                UINT64 rotate = 7 * 24 * 60 * 60;
+                auto rotateIt = output.find("rotateTime");
+                if (rotateIt != output.end())
+                {
+                    rotate = *rotateIt;
+                    rotate *= 24 * 60 * 60;
+                }
+                config_.outputLocal = { true, *pathdirIt, rotate };
                 common::createDir(config_.outputLocal.pathdir);
-                outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir));
+                outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir, config_.outputLocal.rotate));
             }
             else if (*it == "tcp")
             {
@@ -202,7 +215,7 @@ namespace dfsrr
         {
             LOG(WARN, "use local output, but output local ptr failed!, pathDir: [{}]", config_.outputLocal.pathdir);
             common::createDir(config_.outputLocal.pathdir);
-            outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir));
+            outputVec_.push_back(make_shared<OutputLocal>(config_.outputLocal.pathdir, config_.outputLocal.rotate));
         }
 
         if (config_.outputTcp.use && !tcp)
