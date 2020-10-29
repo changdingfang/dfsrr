@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-26 21:51:40
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-28 17:00:58
+// ModifyDate:   2020-10-29 08:32:26
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_SERVER_H__
@@ -52,7 +52,7 @@ namespace dfsrrServer
         inline void stop() { stop_ = true; }
         void run();
 
-        static void recvData(std::string data, std::string key);
+        static void recvData(std::string data, std::string key, void *arg);
 
     private:
         bool parseConfig(const nlohmann::json &);
@@ -63,7 +63,7 @@ namespace dfsrrServer
         bool stop_;
         DfsrrServerConfig_T  config_;
         std::unique_ptr<common::Network> netPtr_;
-        static std::map<std::string, ClientInfo_T> cliInfoMap_;
+        std::map<std::string, ClientInfo_T> cliInfoMap_;
     };
 
 

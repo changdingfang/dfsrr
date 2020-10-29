@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-26 21:52:34
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-28 16:36:31
+// ModifyDate:   2020-10-29 08:31:44
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -20,9 +20,6 @@ namespace dfsrrServer
 {
 
 
-    std::map<std::string, ClientInfo_T> DfsrrServer::cliInfoMap_;
-
-
     DfsrrServer::DfsrrServer(json conf)
         : stop_(false)
           , config_()
@@ -34,7 +31,7 @@ namespace dfsrrServer
 
         try
         {
-            struct SockConf_T sc = { config_.addr, config_.port, 1, DfsrrServer::recvData };
+            struct SockConf_T sc = { config_.addr, config_.port, 1, DfsrrServer::recvData, (void *)this };
             netPtr_ = unique_ptr<Network>(new Network(sc));
             if (netPtr_->server())
             {
@@ -89,14 +86,21 @@ namespace dfsrrServer
     }
 
 
-    void DfsrrServer::recvData(string data, string key)
+    void DfsrrServer::recvData(string data, string key, void *arg)
     {
-        auto it = cliInfoMap_.find(key);
-        if (it == cliInfoMap_.end())
+        DfsrrServer *pDfss = static_cast<DfsrrServer *>(arg);
+        if (pDfss == nullptr)
+        {
+            LOG(WARN, "DfsrrServer ptr is null");
+            return ;
+        }
+
+        auto it = pDfss->cliInfoMap_.find(key);
+        if (it == pDfss->cliInfoMap_.end())
         {
             ClientInfo_T ci;
             ci.lastTime = ::time(nullptr);
-            auto resIt = cliInfoMap_.insert(make_pair(key, ci));
+            auto resIt = pDfss->cliInfoMap_.insert(make_pair(key, ci));
             if (!resIt.second)
             {
                 LOG(ERROR, "insert client info failed!");

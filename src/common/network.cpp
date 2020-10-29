@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-23 18:54:49
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-28 20:32:55
+// ModifyDate:   2020-10-29 08:26:50
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -199,7 +199,7 @@ namespace common
     {
         LOG(DEBUG, "accept a client [{}]", fd);
 
-        Network *pNet = reinterpret_cast<Network *>(arg);
+        Network *pNet = static_cast<Network *>(arg);
         event_base *base = pNet->base_;
         // event_base *base = evconnlistener_get_base(listener);
 
@@ -229,7 +229,7 @@ namespace common
     {
         LOG(DEBUG, "recv....!");
 
-        Network *pNet = reinterpret_cast<Network *>(arg);
+        Network *pNet = static_cast<Network *>(arg);
         if (pNet && pNet->sc_.recvData != nullptr)
         {
             evbuffer *inputBuffer = ::bufferevent_get_input(bev);
@@ -243,7 +243,7 @@ namespace common
             do
             {
                 size_t len = bufferevent_read(bev, data, sizeof(data));
-                pNet->sc_.recvData(string(data, len), to_string(std::hash<bufferevent *>{}(bev)));
+                pNet->sc_.recvData(string(data, len), to_string(std::hash<bufferevent *>{}(bev)), pNet->sc_.arg);
             } while (::evbuffer_get_length(inputBuffer) > 0);
         }
         else
@@ -275,7 +275,7 @@ namespace common
             LOG(INFO, "event callback other....");
         }
 
-        Network *pNet = reinterpret_cast<Network *>(arg);
+        Network *pNet = static_cast<Network *>(arg);
         ::bufferevent_free(bev);
         pNet->eraseBev(bev);
         LOG(DEBUG, "event callback!");
