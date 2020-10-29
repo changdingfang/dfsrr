@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-24 10:53:41
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-28 20:31:34
+// ModifyDate:   2020-10-29 20:16:37
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -23,7 +23,13 @@ namespace dfsrr
 
     OutputTcp::OutputTcp(const std::string &addr, unsigned short port)
     {
-        struct SockConf_T sc = { addr, port, 1, nullptr };
+        struct SockConf_T sc;
+        sc.addr     = addr;
+        sc.port     = port;
+        sc.recvData = nullptr;
+        sc.arg      = this;
+        sc.timeout  = 20;
+        sc.timeoutFunc = nullptr;
         try
         {
             LOG(DEBUG, "OutputTcp ...");

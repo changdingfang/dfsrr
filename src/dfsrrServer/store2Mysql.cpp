@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-29 19:59:12
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 20:08:55
+// ModifyDate:   2020-10-29 20:17:44
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -56,7 +56,8 @@ namespace dfsrrServer
                 fields += it.key() + ",";
                 if (it.key() == "device" || it.key() == "mount")
                 {
-                    values += it.value() + ",";
+                    values += it.value();
+                    values += ",";
                 }
                 else
                 {
