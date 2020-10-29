@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-23 18:49:31
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 08:21:17
+// ModifyDate:   2020-10-29 20:03:17
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __NETWORK_H__
@@ -23,15 +23,18 @@ namespace common
 {
 
     typedef void (* pFn)(std::string, std::string, void *);
+    typedef bool (* pTimeout)(std::string, void *);
 
     struct SockConf_T
     {
         std::string         addr;
         unsigned short int  port;
-        int                 timeout;
 
         pFn                 recvData;
         void                *arg;
+
+        int                 timeout;
+        pTimeout            timeoutFunc;
     };
 
 

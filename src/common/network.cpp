@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-23 18:54:49
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 08:26:50
+// ModifyDate:   2020-10-29 20:03:15
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -208,6 +208,9 @@ namespace common
         bufferevent_setcb(bev, Network::recvCB, nullptr, eventCB, arg);
         bufferevent_enable(bev, EV_READ | EV_PERSIST | EV_ET);
 
+        struct timeval tv { pNet->sc_.timeout, 0 };
+        bufferevent_set_timeouts(bev, &tv, nullptr);
+
         pNet->insertBev(bev);
 
         return ;
@@ -264,6 +267,17 @@ namespace common
         else if (event & BEV_EVENT_ERROR)
         {
             LOG(ERROR, "some other error!");
+        }
+        else if (event & BEV_EVENT_TIMEOUT)
+        {
+            LOG(WARN, "time out...");
+            Network *pNet = static_cast<Network *>(arg);
+            if (pNet->sc_.timeoutFunc(to_string(std::hash<bufferevent *>{}(bev)), pNet->sc_.arg))
+            {
+                LOG(INFO, "re enable event");
+                bufferevent_enable(bev, EV_READ | EV_PERSIST | EV_ET);
+                return ;
+            }
         }
         else if (event & BEV_EVENT_CONNECTED)
         {

@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-26 21:52:34
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 08:31:44
+// ModifyDate:   2020-10-29 20:02:46
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -31,12 +31,27 @@ namespace dfsrrServer
 
         try
         {
-            struct SockConf_T sc = { config_.addr, config_.port, 1, DfsrrServer::recvData, (void *)this };
+            struct SockConf_T sc = 
+            {
+                config_.addr,
+                config_.port,
+                DfsrrServer::recvData,
+                (void *)this,
+                config_.timeout,
+                DfsrrServer::timeout
+            };
+
             netPtr_ = unique_ptr<Network>(new Network(sc));
             if (netPtr_->server())
             {
                 LOG(WARN, "init server failed!");
                 throw("connect server failed!");
+            }
+
+            if (config_.dbUse)
+            {
+                LOG(INFO, "use database...");
+                s2mPtr_ = unique_ptr<Store2Mysql>(new Store2Mysql(config_.dbinfo));
             }
         }
         catch (...)
@@ -76,9 +91,35 @@ namespace dfsrrServer
             config_.addr = (*serverIt).at("addr");
             config_.port = (*serverIt).at("port");
         }
-        catch(...)
+        catch (...)
         {
             LOG(CRITICAL, "parse server config failed!");
+            return false;
+        }
+
+        auto dbIt = confJson.find("database");
+        if (dbIt == confJson.end())
+        {
+            LOG(WARN, "not found database config, not use database!");
+            return true;
+        }
+
+        try
+        {
+            config_.dbUse = true;
+            config_.dbinfo.ip       = dbIt->at("addr");
+            config_.dbinfo.port     = dbIt->at("port");
+            config_.dbinfo.dbName   = dbIt->at("dbname");
+            config_.dbinfo.dbUser   = dbIt->at("username");
+        }
+        catch (json::exception &e)
+        {
+            LOG(ERROR, "error: [{}]", e.what());
+            return false;
+        }
+        catch (...)
+        {
+            LOG(ERROR, "database config failed...");
             return false;
         }
 
@@ -99,7 +140,6 @@ namespace dfsrrServer
         if (it == pDfss->cliInfoMap_.end())
         {
             ClientInfo_T ci;
-            ci.lastTime = ::time(nullptr);
             auto resIt = pDfss->cliInfoMap_.insert(make_pair(key, ci));
             if (!resIt.second)
             {
@@ -109,49 +149,80 @@ namespace dfsrrServer
             it = resIt.first;
         }
 
-        auto &tcpPkg    = it->second.tcpPkg;
-        UINT32 &currLen = it->second.currLen;
+        ClientInfo_T &ci = it->second;
         const char *currDataPtr = data.data();
         UINT32 currRemainder    = data.size();
-        char *head = it->second.head;
 
         do
         {
-            if (currLen < dfsrrProtocol::PkgLen)
+            if (ci.currLen < dfsrrProtocol::PkgLen)
             {
-                tcpPkg.msg.clear();
-                tcpPkg.size = tcpPkg.type = 0;
-                ::memcpy(head + currLen, currDataPtr, dfsrrProtocol::PkgLen - currLen);
-                if (currRemainder + currLen < dfsrrProtocol::PkgLen)
+                ci.head.append(currDataPtr, dfsrrProtocol::PkgLen - ci.currLen);
+                if (currRemainder + ci.currLen < dfsrrProtocol::PkgLen)
                 {
-                    currLen += currRemainder;
+                    ci.currLen += currRemainder;
                     LOG(INFO, "not found head");
                     break;
                 }
-                currRemainder -= (dfsrrProtocol::PkgLen - currLen);
-                currDataPtr = currDataPtr + dfsrrProtocol::PkgLen - currLen;
-                currLen     = dfsrrProtocol::PkgLen;
-                tcpPkg.type = *(UINT32 *)head;
-                tcpPkg.size = *(UINT32 *)(head + 4);
+                currRemainder -= (dfsrrProtocol::PkgLen - ci.currLen);
+                currDataPtr = currDataPtr + dfsrrProtocol::PkgLen - ci.currLen;
+                ci.currLen     = dfsrrProtocol::PkgLen;
+                ci.tcpPkg.type = *(UINT32 *)ci.head.data();
+                ci.tcpPkg.size = *(UINT32 *)(ci.head.data() + 4);
+                ci.head.clear();
             }
 
-            UINT32 length = tcpPkg.size - currLen + dfsrrProtocol::PkgLen;
+            UINT32 length = ci.tcpPkg.size - ci.currLen + dfsrrProtocol::PkgLen;
             UINT32 availableLen = currRemainder >= length ? length : currRemainder;
 
-            tcpPkg.msg += string(currDataPtr, availableLen);
+            ci.tcpPkg.msg += string(currDataPtr, availableLen);
             currDataPtr     += availableLen;
             currRemainder   -= availableLen;
-            currLen         = (currLen + availableLen) % (tcpPkg.size + dfsrrProtocol::PkgLen);
+            ci.currLen         = (ci.currLen + availableLen) % (ci.tcpPkg.size + dfsrrProtocol::PkgLen);
 
-            LOG(DEBUG, "data size: [{}], curr len: [{}], msg size: [{}]", data.size(), currLen, tcpPkg.msg.size());
+            LOG(DEBUG, "data size: [{}], curr len: [{}], msg size: [{}], remainder: [{}]", data.size(), ci.currLen, ci.tcpPkg.msg.size(), currRemainder);
 
-            if (tcpPkg.msg.size() == tcpPkg.size)
+            if (ci.tcpPkg.msg.size() == ci.tcpPkg.size)
             {
                 /* */
-                LOG(DEBUG, "msg: [{}]", tcpPkg.msg);
-                LOG(DEBUG, "type: [{}], size: [{}]", tcpPkg.type, tcpPkg.size);
+                LOG(DEBUG, "msg: [{}]", ci.tcpPkg.msg);
+                LOG(DEBUG, "type: [{}], size: [{}]", ci.tcpPkg.type, ci.tcpPkg.size);
+                string msg;
+                pDfss->s2mPtr_->convert(ci.tcpPkg.msg, msg);
+                pDfss->s2mPtr_->addData(msg);
+                ci.tcpPkg.msg.clear();
+                ci.tcpPkg.size = ci.tcpPkg.type = 0;
             }
         } while (currRemainder > 0);
+    }
+
+
+    bool DfsrrServer::timeout(string key, void *arg)
+    {
+        DfsrrServer *pDfss = static_cast<DfsrrServer *>(arg);
+        if (pDfss == nullptr)
+        {
+            LOG(WARN, "dfsrrServer ptr is null!");
+            return false;
+        }
+
+        auto it = pDfss->cliInfoMap_.find(key);
+        if (it == pDfss->cliInfoMap_.end())
+        {
+            LOG(WARN, "not found in client info map");
+            return false;
+        }
+        if (it->second.timeoutCount++ >= 2)
+        {
+            LOG(WARN, "time out count: [{}]", it->second.timeoutCount);
+            pDfss->cliInfoMap_.erase(it);
+            return false;
+        }
+
+        LOG(DEBUG, "----time out count: [{}]", it->second.timeoutCount);
+        it->second.timeoutCount = 0;
+
+        return true;
     }
 
 
