@@ -1,7 +1,7 @@
 {
     "log" :
     {
-        "file" : "/home/dfsrr/dfsrr/dfsrr-server.log",
+        "file" : "/home/dfsrr/dfsrr/log/dfsrr-server.log",
         "//output" : "[console, file]",
         "output" : ["file"],
         "//log level" : "debug, info, warn, error, critical",
