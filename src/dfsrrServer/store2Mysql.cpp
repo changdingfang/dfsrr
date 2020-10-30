@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-29 19:59:12
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 20:17:44
+// ModifyDate:   2020-10-30 21:23:38
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -42,22 +42,25 @@ namespace dfsrrServer
         string sql;
         string mod = jdata["module"];
         string ts = to_string(jdata["timestamp"]);
+        string ip = jdata["ip"][0];
 
         LOG(INFO, "convert....");
 
         json jmodData = jdata["data"];
+        sql += "insert into `" + mod + "`";;
+        string tmpFields, tmpValues("values");
         for (auto &d : jmodData)
         {
-            string tmpSql("insert into "), fields("(timestamp,"), values(" values(");
-            tmpSql += mod;
-            values += ts + ",";
+            string fields("(`timestamp`,`ip`,"), values("(");
+            values += ts + ",'" + ip + "',";
             for (auto it = d.begin(); it != d.end(); ++it)
             {
-                fields += it.key() + ",";
+                fields += "`" + it.key() + "`,";
                 if (it.key() == "device" || it.key() == "mount")
                 {
+                    values += "'";
                     values += it.value();
-                    values += ",";
+                    values += "',";
                 }
                 else
                 {
@@ -66,13 +69,17 @@ namespace dfsrrServer
                 // LOG(INFO, "key: [{}], ", it.key());
                 // LOG(INFO, "value[{}]", to_string(it.value()));
             }
-            fields = fields.substr(0, fields.size() - 1) + ")";
-            values = values.substr(0, values.size() - 1) + ");";
-            tmpSql += fields + " " + values;
-            sql += tmpSql;
+            // fields = fields.substr(0, fields.size() - 1) + ")";
+            // values = values.substr(0, values.size() - 1) + ")";
+            fields[fields.size() - 1] = ')';
+            values[values.size() - 1] = ')';
+            tmpFields = fields;
+            tmpValues += " " + values + ",";
         }
+        tmpValues[tmpValues.size() - 1] = ';';
+        sql += tmpFields + " " + tmpValues;
 
-        LOG(INFO, "sql: [{}]", sql);
+        LOG(DEBUG, "sql: [{}]", sql);
 
         dst = std::move(sql);
 

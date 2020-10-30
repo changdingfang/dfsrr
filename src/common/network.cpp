@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-23 18:54:49
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 20:03:15
+// ModifyDate:   2020-10-30 08:23:59
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -272,7 +272,7 @@ namespace common
         {
             LOG(WARN, "time out...");
             Network *pNet = static_cast<Network *>(arg);
-            if (pNet->sc_.timeoutFunc(to_string(std::hash<bufferevent *>{}(bev)), pNet->sc_.arg))
+            if (pNet->sc_.timeoutFunc && pNet->sc_.timeoutFunc(to_string(std::hash<bufferevent *>{}(bev)), pNet->sc_.arg))
             {
                 LOG(INFO, "re enable event");
                 bufferevent_enable(bev, EV_READ | EV_PERSIST | EV_ET);

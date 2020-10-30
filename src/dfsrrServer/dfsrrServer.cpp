@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-26 21:52:34
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 20:02:46
+// ModifyDate:   2020-10-30 21:23:20
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -97,6 +97,8 @@ namespace dfsrrServer
             return false;
         }
 
+
+
         auto dbIt = confJson.find("database");
         if (dbIt == confJson.end())
         {
@@ -188,8 +190,11 @@ namespace dfsrrServer
                 LOG(DEBUG, "msg: [{}]", ci.tcpPkg.msg);
                 LOG(DEBUG, "type: [{}], size: [{}]", ci.tcpPkg.type, ci.tcpPkg.size);
                 string msg;
-                pDfss->s2mPtr_->convert(ci.tcpPkg.msg, msg);
-                pDfss->s2mPtr_->addData(msg);
+                if (pDfss->s2mPtr_)
+                {
+                    pDfss->s2mPtr_->convert(ci.tcpPkg.msg, msg);
+                    pDfss->s2mPtr_->addData(msg);
+                }
                 ci.tcpPkg.msg.clear();
                 ci.tcpPkg.size = ci.tcpPkg.type = 0;
             }

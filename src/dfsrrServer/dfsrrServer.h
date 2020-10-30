@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-26 21:51:40
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 20:02:54
+// ModifyDate:   2020-10-30 21:23:10
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_SERVER_H__
@@ -39,8 +39,8 @@ namespace dfsrrServer
     {
         std::string         addr;
         unsigned short      port;
-        UINT32              intv { 10 * 1000 };    /* us */
-        int                 timeout { 30 };    /* s */ 
+        UINT32              intv { 10 * 1000 };     /* us */
+        int                 timeout { 60 };         /* s */ 
 
         bool                dbUse { false };
         common::DBInfo_T    dbinfo;

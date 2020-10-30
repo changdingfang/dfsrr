@@ -4,7 +4,7 @@
 # Author:       dingfang
 # CreateDate:   2020-10-28 20:42:57
 # ModifyAuthor: dingfang
-# ModifyDate:   2020-10-28 21:15:05
+# ModifyDate:   2020-10-30 14:35:47
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -41,6 +41,7 @@ package()
     cp conf/dfsrr.json package/dfsrr/conf/
     cp conf/dfsrr-server.json package/dfsrr/conf/
     cp shell/dfsrrctl.sh package/dfsrr/
+    cp shell/dfsrrSql.sql package/dfsrr/
 
     cd package
     tar -zcf dfsrr.tar.gz dfsrr/

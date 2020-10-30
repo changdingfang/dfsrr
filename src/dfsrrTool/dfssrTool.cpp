@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-14 19:51:06
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-23 18:53:00
+// ModifyDate:   2020-10-30 08:42:30
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -77,6 +77,10 @@ int parseParam(int argc, char **argv, struct ModuleConfig_T &cfg)
                  || flag == "partition" || flag == "tcp" || flag == "udp" || flag == "traffic")
         {
             cfg.name = flag;
+            if (flag == "mem")
+            {
+                cfg.name = "memory";
+            }
         }
     }
 
