@@ -3,13 +3,14 @@
 // Author:       dingfang
 // CreateDate:   2020-10-29 19:54:34
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 20:03:55
+// ModifyDate:   2020-10-31 15:29:13
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __MYSQLDB_H__
 #define __MYSQLDB_H__
 
 #include "common/type.h"
+#include "nlohmann/json.hpp"
 
 #include <mysql/mysql.h>
 
@@ -36,6 +37,7 @@ namespace common
         ~MysqlDB();
 
         bool execSql(const std::string &sql);
+        bool execSql(const std::string &sql, nlohmann::json &jdata);
 
     private:
         DBInfo_T    dbinfo_;

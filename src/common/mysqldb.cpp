@@ -3,13 +3,14 @@
 // Author:       dingfang
 // CreateDate:   2020-10-29 19:59:16
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-29 20:03:58
+// ModifyDate:   2020-10-31 17:54:43
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
 #include "common/mysqldb.h"
 
 using namespace std;
+using json = nlohmann::json;
 
 namespace common
 {
@@ -30,7 +31,12 @@ namespace common
                     , nullptr
                     , 0))
         {
-            LOG(ERROR, "connecting to database error: [{}]", ::mysql_error(conn));
+            LOG(ERROR, "connecting to database error: [{}], addr: [{}], port: [{}], dbname: [{}], user: [{}]"
+                    , ::mysql_error(conn)
+                    , dbinfo.ip
+                    , dbinfo.port
+                    , dbinfo.dbName
+                    , dbinfo.dbUser);
             throw("connecting to database failed!");
         }
         mysql_set_character_set(conn, "utf8");
@@ -49,7 +55,14 @@ namespace common
     }
 
 
-    bool MysqlDB::execSql(const string &sql)
+    bool MysqlDB::execSql(const std::string &sql)
+    {
+        json jdata;
+        return execSql(sql, jdata);
+    }
+
+
+    bool MysqlDB::execSql(const string &sql, json &jdata)
     {
         if (sql.empty())
         {
@@ -68,15 +81,18 @@ namespace common
         result = ::mysql_use_result(conn_);
         if (result)
         {
-            // int numFields   = ::mysql_num_fields(result);
+            int numFields   = ::mysql_num_fields(result);
             // int numRows     = ::mysql_num_rows(result);
 
+            MYSQL_FIELD *fields = ::mysql_fetch_field(result);
             while ((row = ::mysql_fetch_row(result)) != nullptr)
             {
-                /* select result */
-                /* row[0]; */
-                /* row[1]; */
-                /* row[2]; */
+                json jrow;
+                for (int i = 0; i < numFields; ++i)
+                {
+                    jrow[fields[i].name] = row[i];
+                }
+                jdata.push_back(jrow);
             }
             ::mysql_free_result(result);
         }
