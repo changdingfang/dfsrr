@@ -1,0 +1,24 @@
+{
+    "log" :
+    {
+        "file" : "/home/dfsrr/dfsrr/log/dfsrr-http-server.log",
+        "//output" : ["console", "file"],
+        "output" : ["file"],
+        "//log level" : "debug, info, warn, error, critical",
+        "level" : "info"
+    },
+    "server" : 
+    {
+        "type" : "tcp",
+        "addr" : "0.0.0.0",
+        "port" : 4388
+    },
+    "database":
+    {
+        "addr": "127.0.0.1",
+        "port": 3306,
+        "dbname": "dfsrr",
+        "username": "dfsrr",
+        "userpwd": "1"
+    }
+}
