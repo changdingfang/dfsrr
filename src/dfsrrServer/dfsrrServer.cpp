@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-26 21:52:34
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-30 21:23:20
+// ModifyDate:   2020-10-31 15:43:30
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -97,8 +97,6 @@ namespace dfsrrServer
             return false;
         }
 
-
-
         auto dbIt = confJson.find("database");
         if (dbIt == confJson.end())
         {
@@ -113,6 +111,7 @@ namespace dfsrrServer
             config_.dbinfo.port     = dbIt->at("port");
             config_.dbinfo.dbName   = dbIt->at("dbname");
             config_.dbinfo.dbUser   = dbIt->at("username");
+            config_.dbinfo.dbUserPwd= dbIt->at("userpwd");
         }
         catch (json::exception &e)
         {

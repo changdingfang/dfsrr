@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-29 19:59:12
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-30 21:23:38
+// ModifyDate:   2020-10-31 12:11:06
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -43,8 +43,6 @@ namespace dfsrrServer
         string mod = jdata["module"];
         string ts = to_string(jdata["timestamp"]);
         string ip = jdata["ip"][0];
-
-        LOG(INFO, "convert....");
 
         json jmodData = jdata["data"];
         sql += "insert into `" + mod + "`";;
