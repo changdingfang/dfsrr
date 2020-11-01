@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-29 19:54:34
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-31 15:29:13
+// ModifyDate:   2020-11-01 09:52:25
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __MYSQLDB_H__
@@ -38,6 +38,11 @@ namespace common
 
         bool execSql(const std::string &sql);
         bool execSql(const std::string &sql, nlohmann::json &jdata);
+
+    private:
+        bool connect();
+        bool reconnect();
+        void close();
 
     private:
         DBInfo_T    dbinfo_;

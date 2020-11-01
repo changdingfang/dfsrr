@@ -3,12 +3,13 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 12:30:23
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-31 16:48:19
+// ModifyDate:   2020-11-01 10:45:31
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_H__
 #define __DFSRR_H__
 
+#include "common/type.h"
 #include "event2/http.h"
 #include "nlohmann/json.hpp"
 #include "common/mysqldb.h"
@@ -43,12 +44,13 @@ namespace dfsrrWebServer
         common::DBInfo_T dbinfo_;
         std::unique_ptr<common::MysqlDB> dbPtr_;
 
-        std::string mod_;
-        std::string metric_;
-        std::string watch_;
+        std::string mod_        { "" };
+        std::string metric_     { "" };
+        std::string watch_      { "" };
+        std::string startTime_  { "" };
+        std::string endTime_    { "" };
 
         static std::set<std::string> moduleSet_;
-
     };
 
 }; /* dfsrrWebServer namespace end */

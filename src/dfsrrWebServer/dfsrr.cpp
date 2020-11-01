@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 12:31:56
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-31 16:50:43
+// ModifyDate:   2020-11-01 10:47:33
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -91,7 +91,7 @@ namespace dfsrrWebServer
         if (cmdtype != "GET")
         {
             LOG(WARN, "request not GET!, type: [{}]", cmdtype);
-            // return ;
+            return ;
         }
 
         string uri = ::evhttp_request_get_uri(req);
@@ -121,7 +121,7 @@ namespace dfsrrWebServer
         LOG(DEBUG, "=============================="); 
         string data;
         Route::getInput(req, data);
-        LOG(INFO, "data: [{}]", data);
+        LOG(DEBUG, "data: [{}]", data);
         LOG(DEBUG, "==============================");
 
         string response = "error!";
@@ -160,7 +160,7 @@ namespace dfsrrWebServer
         mod_ = modIt->second;
 
         this->parseCommonParam(paramMap);
-        this->selectData(data);
+        code = this->selectData(data);
 
         if (code == SERVER_ERROR)
         {
@@ -178,17 +178,15 @@ namespace dfsrrWebServer
 
     void DfsrrDataSelect::parseCommonParam(const std::map<std::string, std::string> &paramMap)
     {
+        watch_ = "10";
         auto watchIt = paramMap.find("watch");
         if (watchIt != paramMap.end())
         {
             /* 需要检查是否为数字 */
             try
             {
-                watch_ = watchIt->second;
-                if (stoi(watchIt->second) > 50)
-                {
-                    watch_ = "50";
-                }
+                int w   = stoi(watchIt->second);
+                watch_  = w > 50 ? "50" : to_string(w);
             }
             catch (...) 
             { 
@@ -203,13 +201,38 @@ namespace dfsrrWebServer
         {
             metric_ = metricIt->second;
         }
+
+        startTime_.clear();
+        auto startIt = paramMap.find("startTime");
+        if (startIt != paramMap.end())
+        {
+            startTime_ = startIt->second;
+        }
+
+        endTime_.clear();
+        auto endIt = paramMap.find("endTime");
+        if (endIt != paramMap.end())
+        {
+            endTime_ = startIt->second;
+        }
     }
 
 
     int DfsrrDataSelect::selectData(nlohmann::json &data)
     {
         string sql("select ");
-        sql += metric_ + " from `" + mod_ + "` ";
+        sql += metric_ + " from `" + mod_ + "` where idx > 0 ";
+
+        if (!startTime_.empty())
+        {
+            sql += " and timestamp >= " + startTime_;
+        }
+
+        if (!endTime_.empty())
+        {
+            sql += " and timestamp <= " + endTime_;
+        }
+
         sql += " order by timestamp desc limit " + watch_;
         if (!dbPtr_->execSql(sql, data))
         {

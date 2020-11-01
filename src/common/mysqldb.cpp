@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-29 19:59:16
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-31 17:54:43
+// ModifyDate:   2020-11-01 09:56:40
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -20,36 +20,61 @@ namespace common
         : dbinfo_(dbinfo)
           , conn_(nullptr)
     {
-        LOG(INFO, "init mysql database...");
-        MYSQL *conn = ::mysql_init(nullptr);
-        if (!::mysql_real_connect(conn
-                    , dbinfo.ip.c_str()
-                    , dbinfo.dbUser.c_str()
-                    , dbinfo.dbUserPwd.c_str()
-                    , dbinfo.dbName.c_str()
-                    , dbinfo.port
-                    , nullptr
-                    , 0))
+        if (!this->connect())
         {
-            LOG(ERROR, "connecting to database error: [{}], addr: [{}], port: [{}], dbname: [{}], user: [{}]"
-                    , ::mysql_error(conn)
-                    , dbinfo.ip
-                    , dbinfo.port
-                    , dbinfo.dbName
-                    , dbinfo.dbUser);
             throw("connecting to database failed!");
         }
-        mysql_set_character_set(conn, "utf8");
-        conn_ = conn;
-        LOG(INFO, "connect msyql database successful!");
     }
 
 
     MysqlDB::~MysqlDB()
     {
+        this->close();
+    }
+
+
+    bool MysqlDB::connect()
+    {
+        LOG(INFO, "init mysql database...");
+        MYSQL *conn = ::mysql_init(nullptr);
+        if (!::mysql_real_connect(conn
+                    , dbinfo_.ip.c_str()
+                    , dbinfo_.dbUser.c_str()
+                    , dbinfo_.dbUserPwd.c_str()
+                    , dbinfo_.dbName.c_str()
+                    , dbinfo_.port
+                    , nullptr
+                    , 0))
+        {
+            LOG(ERROR, "connecting to database error: [{}], addr: [{}], port: [{}], dbname: [{}], user: [{}]"
+                    , ::mysql_error(conn)
+                    , dbinfo_.ip
+                    , dbinfo_.port
+                    , dbinfo_.dbName
+                    , dbinfo_.dbUser);
+            return false;
+        }
+
+        mysql_set_character_set(conn, "utf8");
+        conn_ = conn;
+        LOG(INFO, "connect msyql database successful!");
+
+        return true;
+    }
+
+
+    bool MysqlDB::reconnect()
+    {
+        this->close();
+        return this->connect();
+    }
+
+
+    void MysqlDB::close()
+    {
         if (conn_)
         {
-            mysql_close(conn_);
+            ::mysql_close(conn_);
             conn_ = nullptr;
         }
     }
@@ -71,7 +96,16 @@ namespace common
         }
         if (::mysql_real_query(conn_, sql.data(), sql.size()) != 0)
         {
-            LOG(ERROR, "exec sql failed! sql: [{}], error: [{}]", sql, ::mysql_error(conn_));
+            string errMsg(::mysql_error(conn_));
+            LOG(ERROR, "exec sql failed! sql: [{}], error: [{}]", sql, errMsg);
+            if (errMsg == "MySQL server has gone away")
+            {
+                if (!this->reconnect())
+                {
+                    LOG(ERROR, "reconnect mysql failed!");
+                    return false;
+                }
+            }
             return false;
         }
 

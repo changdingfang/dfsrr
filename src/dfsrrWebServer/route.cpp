@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 10:59:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-31 16:05:18
+// ModifyDate:   2020-10-31 19:06:28
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -50,7 +50,7 @@ namespace dfsrrWebServer
                 , DfsrrDataSelect::dfsrr
                 , static_cast<void *>(dsPtr_.get()));
         
-        /* httpServerPtr_->setGenCallback(nullptr, nullptr); */
+        httpServerPtr_->setGenCallback(Route::helloWorld, nullptr);
 
         return true;
     }
