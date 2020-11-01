@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 12:30:23
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-01 10:45:31
+// ModifyDate:   2020-11-01 13:06:30
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_H__
@@ -22,9 +22,6 @@
 namespace dfsrrWebServer
 {
 
-    static const int SERVER_ERROR = 503;
-    static const std::string SERVER_ERROR_MSG = "server internal error!";
-    static const int SERVER_NOT_FOUND = 404;
 
     class DfsrrDataSelect
     {
@@ -37,7 +34,7 @@ namespace dfsrrWebServer
     private:
         bool parseConfig(const nlohmann::json &conf);
 
-        void parseCommonParam(const std::map<std::string, std::string> &);
+        int parseCommonParam(const std::map<std::string, std::string> &);
         int selectData(nlohmann::json &data);
 
     private:
@@ -51,6 +48,7 @@ namespace dfsrrWebServer
         std::string endTime_    { "" };
 
         static std::set<std::string> moduleSet_;
+        static std::map< std::string, std::set<std::string> > metricSet_;
     };
 
 }; /* dfsrrWebServer namespace end */

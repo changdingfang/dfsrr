@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 10:59:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-31 19:06:28
+// ModifyDate:   2020-11-01 13:01:21
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -53,6 +53,21 @@ namespace dfsrrWebServer
         httpServerPtr_->setGenCallback(Route::helloWorld, nullptr);
 
         return true;
+    }
+
+
+    std::string Route::getResponseMsg(ResponseCode_E code)
+    {
+        string msg;
+        switch (code)
+        {
+            case SuccessCode:       msg = "successful";         break;
+            case ParamErrorCode:    msg = "param error!";       break;
+            case ServerErrorCode:   msg = "server internal error!"; break;
+            default: msg = "server internal error!"; break;
+        }
+
+        return std::move(msg);
     }
 
 

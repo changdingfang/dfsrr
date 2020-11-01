@@ -3,14 +3,17 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 12:31:56
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-01 10:47:33
+// ModifyDate:   2020-11-01 13:25:07
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
+#include "common/stringUtil.h"
 #include "dfsrrWebServer/dfsrr.h"
 #include "dfsrrWebServer/route.h"
 #include "event2/buffer.h"
 #include <event2/keyvalq_struct.h>
+
+#include <vector>
 
 using namespace std;
 using namespace common;
@@ -30,6 +33,65 @@ namespace dfsrrWebServer
             , "tcp"
             , "udp"
     };
+
+    std::map< std::string, std::set<std::string> > DfsrrDataSelect::metricSet_
+    {
+        { 
+            "cpu", 
+                {
+                    "idx", "ip", "timestamp"
+                        , "hirq", "idle", "sirq"
+                        , "sys", "user", "util", "wait"
+                }
+        },
+        {
+            "memory",
+            { 
+                "idx", "ip", "timestamp"
+                    , "buff", "cache", "free"
+                    , "total", "used", "util" 
+            }
+        },
+        {
+            "load",
+            {
+                "idx", "ip", "timestamp"
+                    , "load1", "load5", "load15", "plit", "runq"
+            }
+        },
+        {
+            "partition",
+            {
+                "idx", "ip", "timestamp"
+                    , "bfree", "btotl", "bused", "device"
+                    , "ifree", "itotl", "iutil", "mount", "util"
+            }
+        },
+        {
+            "traffic",
+            {
+                "idx", "ip", "timestamp"
+                    , "bytin", "bytout", "device"
+                    , "pktdrp" , "pkterr", "pktin", "pktout",
+            }
+        },
+        {
+            "tcp",
+            {
+                "idx", "ip", "timestamp"
+                    , "AtmpFa", "CurrEs", "EstRes", "active"
+                    , "iseg", "outseg", "pasive", "retran"
+            }
+        },
+        {
+            "udp",
+            {
+                "idx", "ip", "timestamp"
+                    , "idgm", "idmerr", "noport", "odgm"
+            }
+        }
+    };
+
 
     DfsrrDataSelect::DfsrrDataSelect(const nlohmann::json &conf)
     {
@@ -124,17 +186,16 @@ namespace dfsrrWebServer
         LOG(DEBUG, "data: [{}]", data);
         LOG(DEBUG, "==============================");
 
-        string response = "error!";
-        int code = 500;
+        string response;
         DfsrrDataSelect *pDs = static_cast<DfsrrDataSelect *>(arg);
         if (pDs != nullptr)
         {
-            code = pDs->doRun(paramMap, response);
+            pDs->doRun(paramMap, response);
         }
 
         struct evbuffer *evb = evbuffer_new();
         evbuffer_add_printf(evb, response.c_str());
-        evhttp_send_reply(req, code, "ok", evb);
+        evhttp_send_reply(req, 200, "ok", evb);
 
         if (evb)
         {
@@ -146,37 +207,32 @@ namespace dfsrrWebServer
     int DfsrrDataSelect::doRun(const std::map<std::string, std::string> &paramMap, std::string &response)
     {
         json res, data = json::array();
-        int code = 200;
-        string msg("successful");
+        int code = SuccessCode;
         auto modIt = paramMap.find("module");
         if (modIt == paramMap.end() || moduleSet_.find(modIt->second) == moduleSet_.end())
         {
             LOG(WARN, "param error! not found module.");
-            res["code"] = 403;
-            res["msg"]  = "not found module param!";
-            response = res.dump();
-            return 403;
+            code = ParamErrorCode;
         }
-        mod_ = modIt->second;
-
-        this->parseCommonParam(paramMap);
-        code = this->selectData(data);
-
-        if (code == SERVER_ERROR)
+        else
         {
-            msg = SERVER_ERROR_MSG;
+            mod_ = modIt->second;
+            if ((code = this->parseCommonParam(paramMap)) == SuccessCode)
+            {
+                code = this->selectData(data);
+            }
         }
 
         res["code"] = code;
         res["data"] = data;
-        res["msg"]  = msg;
+        res["msg"]  = Route::getResponseMsg(static_cast<ResponseCode_E>(code));
         response = res.dump();
 
-        return 200;
+        return 0;
     }
 
 
-    void DfsrrDataSelect::parseCommonParam(const std::map<std::string, std::string> &paramMap)
+    int DfsrrDataSelect::parseCommonParam(const std::map<std::string, std::string> &paramMap)
     {
         watch_ = "10";
         auto watchIt = paramMap.find("watch");
@@ -190,8 +246,8 @@ namespace dfsrrWebServer
             }
             catch (...) 
             { 
-                watch_ = "10";
                 LOG(WARN, "param watch is not number!, watch: [{}]", watchIt->second);
+                return ParamErrorCode;
             }
         }
 
@@ -200,6 +256,17 @@ namespace dfsrrWebServer
         if (metricIt != paramMap.end())
         {
             metric_ = metricIt->second;
+            vector<string> metricVec = common::split(metric_, ",");
+            for (auto &val : metricVec)
+            {
+                // metric_ += common::strip(val);
+                auto modSet = metricSet_[mod_];
+                if (modSet.find(val) == modSet.end())
+                {
+                    LOG(WARN, "parse metric error! metric: [{}], value: [{}]", metric_, val);
+                    return ParamErrorCode;
+                }
+            }
         }
 
         startTime_.clear();
@@ -215,6 +282,8 @@ namespace dfsrrWebServer
         {
             endTime_ = startIt->second;
         }
+
+        return SuccessCode;
     }
 
 
@@ -237,10 +306,10 @@ namespace dfsrrWebServer
         if (!dbPtr_->execSql(sql, data))
         {
             LOG(ERROR, "exec sql failed!");
-            return SERVER_ERROR;
+            return ServerErrorCode;
         }
 
-        return 200;
+        return SuccessCode;
     }
 
 
