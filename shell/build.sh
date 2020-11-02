@@ -4,7 +4,7 @@
 # Author:       dingfang
 # CreateDate:   2020-10-28 20:42:57
 # ModifyAuthor: dingfang
-# ModifyDate:   2020-10-30 14:35:47
+# ModifyDate:   2020-11-02 20:21:11
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -35,13 +35,12 @@ package()
     mkdir package/dfsrr/bin
     mkdir package/dfsrr/conf
 
-    cp build/bin/dfsrr package/dfsrr/bin/
-    cp build/bin/dfsrr-server package/dfsrr/bin/
-    cp build/bin/dfsrrTool package/dfsrr/
-    cp conf/dfsrr.json package/dfsrr/conf/
-    cp conf/dfsrr-server.json package/dfsrr/conf/
+    cp build/bin/dfsrr* package/dfsrr/bin/
+    cp conf/dfsrr*.json package/dfsrr/conf/
     cp shell/dfsrrctl.sh package/dfsrr/
     cp shell/dfsrrSql.sql package/dfsrr/
+
+    cp -r imgs package/dfsrr/
 
     cd package
     tar -zcf dfsrr.tar.gz dfsrr/
