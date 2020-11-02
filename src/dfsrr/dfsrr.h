@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:08:11
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-28 20:30:27
+// ModifyDate:   2020-11-02 12:35:50
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_H__
@@ -56,7 +56,7 @@ namespace dfsrr
         OutputLocal_T   outputLocal;
         OutputTcp_T     outputTcp;
         UINT32  intv { 10 * 1000 };    /* us */
-        int     checkOutputIntv_ { 10 }; /* s */
+        int     checkOutputIntv_ { 180 }; /* s */
 
     };
 

@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-20 19:14:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-28 20:30:16
+// ModifyDate:   2020-11-01 16:55:06
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dfsrr/dfsrr.h"
@@ -53,7 +53,7 @@ namespace dfsrr
             for (auto &mod : moduleVec_)
             {
                 time_t nowTime = time(nullptr);
-                if (nowTime - mod.lastTime < mod.intv)
+                if (nowTime % mod.intv != 0 || nowTime - mod.lastTime < mod.intv)
                 {
                     continue;
                 }
