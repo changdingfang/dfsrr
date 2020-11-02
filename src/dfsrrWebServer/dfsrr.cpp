@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 12:31:56
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-01 13:25:07
+// ModifyDate:   2020-11-02 19:32:23
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -159,26 +159,11 @@ namespace dfsrrWebServer
         string uri = ::evhttp_request_get_uri(req);
         LOG(INFO, "Received a {} request for {}\nHeader: ", cmdtype, uri);
 
-        struct evkeyvalq *headers = evhttp_request_get_input_headers(req);
-        for (struct evkeyval *header = headers->tqh_first; header; header = header->next.tqe_next)
-        {
-            LOG(DEBUG, " {}: {}", header->key, header->value);
-        }
-
-        struct evkeyvalq params;
-        if (::evhttp_parse_query(uri.c_str(), &params) != 0)
-        {
-            LOG(WARN, "parse param failed!");
-            return ;
-        }
+        map<string, string> headerMap;
+        Route::getHeaderOfReq(req, headerMap);
 
         map<string, string> paramMap;
-        for (struct evkeyval *header = params.tqh_first; header; header = header->next.tqe_next)
-        {
-            // Route::getParam(&params, "module", mod);
-            paramMap[header->key] = header->value;
-        }
-        evhttp_clear_headers(&params);
+        Route::getHeaderOfUri(uri, paramMap);
 
         LOG(DEBUG, "=============================="); 
         string data;

@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 10:59:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-01 13:01:21
+// ModifyDate:   2020-11-02 20:18:33
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -45,6 +45,7 @@ namespace dfsrrWebServer
             LOG(ERROR, "http server ptr is null!");
             return false;
         }
+        httpServerPtr_->setCallback("/favicon.ico", Route::favicon, nullptr);
         httpServerPtr_->setCallback("/helloworld", Route::helloWorld, nullptr);
         httpServerPtr_->setCallback("/dfsrr"
                 , DfsrrDataSelect::dfsrr
@@ -68,6 +69,42 @@ namespace dfsrrWebServer
         }
 
         return std::move(msg);
+    }
+
+
+    int Route::getHeaderOfUri(const string &uri, std::map<std::string, std::string> &headerMap)
+    {
+        struct evkeyvalq headers;
+        if (::evhttp_parse_query(uri.c_str(), &headers) != 0)
+        {
+            LOG(WARN, "parse param failed!");
+            return -1;
+        }
+        Route::getHeader(&headers, headerMap);
+        evhttp_clear_headers(&headers);
+
+        return 0;
+    }
+
+
+    int Route::getHeaderOfReq(struct evhttp_request *req, std::map<string, string> &headerMap)
+    {
+        const struct evkeyvalq *headers = ::evhttp_request_get_input_headers(req);
+        return Route::getHeader(headers, headerMap);
+    }
+
+
+    int Route::getHeader(const struct evkeyvalq *headers, std::map<std::string, std::string> &headerMap)
+    {
+        struct evkeyval *header = headers->tqh_first; 
+        while (header)
+        {
+            headerMap[header->key] = header->value;
+            LOG(DEBUG, " {}: {}", header->key, header->value);
+            header = header->next.tqe_next;
+        }
+
+        return 0;
     }
 
 
@@ -102,7 +139,7 @@ namespace dfsrrWebServer
 
     void Route::getCmdType(const struct evhttp_request *req, string &cmdtype)
     {
-        switch (evhttp_request_get_command(req))
+        switch (::evhttp_request_get_command(req))
         {
             case EVHTTP_REQ_GET:
                 cmdtype = "GET";
@@ -137,21 +174,58 @@ namespace dfsrrWebServer
     }
 
 
+    void Route::favicon(struct evhttp_request *req, void *arg)
+    {
+        LOG(CRITICAL, "FAVICON......");
+        string cmdtype;
+        Route::getCmdType(req, cmdtype);
+        LOG(INFO, "Received a {} request for {}", cmdtype.c_str(), ::evhttp_request_get_uri(req));
+
+        map<string, string> headerMap;
+        Route::getHeaderOfReq(req, headerMap);
+
+        LOG(DEBUG, "=============================="); 
+        string data;
+        Route::getInput(req, data);
+        LOG(DEBUG, "==============================");
+
+        ::evhttp_add_header(::evhttp_request_get_output_headers(req), "Content-Type", "image/png");
+
+        int fd = -1;
+        if ((fd = ::open("../imgs/favicon.jpg", O_RDONLY)) < 0)
+        {
+            LOG(ERROR, "open favicon file failed!");
+            ::evhttp_send_error(req, 404, "favicon file was not found!");
+            return ;
+        }
+
+        struct stat st;
+        if (::fstat(fd, &st) < 0)
+        {
+            LOG(ERROR, "get file stat info failed!");
+            ::evhttp_send_error(req, 404, "get file stat info failed!");
+            return ;
+        }
+
+        struct evbuffer *evb = nullptr;
+        evb = ::evbuffer_new();
+        ::evbuffer_add_file(evb, fd, 0, st.st_size);
+        ::evhttp_send_reply(req, SuccessCode, "ok", evb);
+        if (evb)
+        {
+            ::evbuffer_free(evb);
+        }
+    }
+
+
     void Route::helloWorld(struct evhttp_request *req, void *arg)
     {
         string cmdtype;
-        struct evkeyvalq *headers;
-        struct evkeyval *header;
-
         Route::getCmdType(req, cmdtype);
+        LOG(INFO, "Received a {} request for {}", cmdtype.c_str(), ::evhttp_request_get_uri(req));
 
-        LOG(INFO, "Received a {} request for {}\nHeader: ", cmdtype.c_str(), evhttp_request_get_uri(req));
-
-        headers = evhttp_request_get_input_headers(req);
-        for (header = headers->tqh_first; header; header = header->next.tqe_next)
-        {
-            LOG(DEBUG, " {}: {}", header->key, header->value);
-        }
+        map<string, string> headerMap;
+        Route::getHeaderOfReq(req, headerMap);
 
         LOG(DEBUG, "=============================="); 
         string data;
@@ -159,12 +233,12 @@ namespace dfsrrWebServer
         LOG(DEBUG, "==============================");
 
         struct evbuffer *evb = nullptr;
-        evb = evbuffer_new();
-        evbuffer_add_printf(evb, "hello world\n");
-        evhttp_send_reply(req, 200, "ok", evb);
+        evb = ::evbuffer_new();
+        ::evbuffer_add_printf(evb, "hello world\n");
+        ::evhttp_send_reply(req, SuccessCode, "ok", evb);
         if (evb)
         {
-            evbuffer_free(evb);
+            ::evbuffer_free(evb);
         }
     }
 
