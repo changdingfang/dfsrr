@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 12:31:56
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-02 19:32:23
+// ModifyDate:   2020-11-03 19:41:05
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -208,6 +208,7 @@ namespace dfsrrWebServer
             }
         }
 
+        res["module"] = mod_;
         res["code"] = code;
         res["data"] = data;
         res["msg"]  = Route::getResponseMsg(static_cast<ResponseCode_E>(code));
@@ -268,6 +269,13 @@ namespace dfsrrWebServer
             endTime_ = startIt->second;
         }
 
+        ip_.clear();
+        auto ipIt = paramMap.find("ip");
+        if (ipIt != paramMap.end())
+        {
+            ip_ = ipIt->second;
+        }
+
         return SuccessCode;
     }
 
@@ -285,6 +293,11 @@ namespace dfsrrWebServer
         if (!endTime_.empty())
         {
             sql += " and timestamp <= " + endTime_;
+        }
+
+        if (!ip_.empty())
+        {
+            sql += " and ip = '" + ip_ + "' ";
         }
 
         sql += " order by timestamp desc limit " + watch_;

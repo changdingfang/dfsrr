@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 12:30:23
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-01 13:06:30
+// ModifyDate:   2020-11-03 19:40:49
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_H__
@@ -46,6 +46,7 @@ namespace dfsrrWebServer
         std::string watch_      { "" };
         std::string startTime_  { "" };
         std::string endTime_    { "" };
+        std::string ip_         { "" };
 
         static std::set<std::string> moduleSet_;
         static std::map< std::string, std::set<std::string> > metricSet_;

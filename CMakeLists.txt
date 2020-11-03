@@ -18,13 +18,22 @@ message(STATUS "DEP_LIB: ${DEP_LIB}")
 # mysql依赖库
 link_directories(/usr/lib64/mysql)
 
+option(TEST_BUILD "build test dfsrr" OFF)
+
 add_subdirectory(src/common)
+add_subdirectory(module)
 add_subdirectory(src/dfsrr)
 add_subdirectory(src/dfsrrServer)
 add_subdirectory(src/dfsrrWebServer)
 add_subdirectory(src/dfsrrTool)
-add_subdirectory(module)
-add_subdirectory(tests)
+
+if (TEST_BUILD)
+    message(STATUS "test build")
+    add_subdirectory(tests)
+endif()
+
+
+    
 
 # FIND_LIBRARY(RUNTIME_LIB mysqlclient /usr/lib /usr/lib64 /usr/lib64/mysql NO_DEFAULT_PATH)
 # message(STATUS "mysqllib: ${RUNTIME_LIB}")
