@@ -4,7 +4,7 @@
 # Author:       dingfang
 # CreateDate:   2020-10-28 20:42:57
 # ModifyAuthor: dingfang
-# ModifyDate:   2020-11-02 20:21:11
+# ModifyDate:   2020-11-07 10:31:00
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -46,6 +46,12 @@ package()
     tar -zcf dfsrr.tar.gz dfsrr/
 }
 
+if [[ "$#" == "1" && "${1}" == "--depend" ]]; then
+    echo "编译第三方依赖... ..."
+    sleep 1
+    cd ${ROOTDIR}/../depend/src/
+    bash build.sh
+fi
 
 build
 package
