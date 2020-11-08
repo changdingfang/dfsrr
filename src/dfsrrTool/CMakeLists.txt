@@ -7,7 +7,8 @@ include_directories(${ROOT_DIRECTORY}/module)
 include_directories(${DEP_INCLUDE})
 
 link_directories(${DEP_LIB})
+link_directories(${DEP_LIB}/libevent)
 
 
 add_executable(dfsrrTool ${SOURCE_FILES})
-target_link_libraries(dfsrrTool dfmodule dflog fmt common pthread)
+target_link_libraries(dfsrrTool dfmodule dflog fmt common pthread libsqlite3.a)

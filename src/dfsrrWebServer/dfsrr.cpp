@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 12:31:56
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-03 19:41:05
+// ModifyDate:   2020-11-08 18:17:08
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -179,7 +179,7 @@ namespace dfsrrWebServer
         }
 
         struct evbuffer *evb = evbuffer_new();
-        evbuffer_add_printf(evb, response.c_str());
+        evbuffer_add_printf(evb, (void *)(response.c_str()));
         evhttp_send_reply(req, 200, "ok", evb);
 
         if (evb)

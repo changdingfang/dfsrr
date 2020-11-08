@@ -7,6 +7,7 @@ include_directories(${DEP_INCLUDE})
 include_directories(${DEP_INCLUDE}/libevent)
 
 link_directories(${DEP_LIB})
+link_directories(${DEP_LIB}/libevent)
 
 add_executable(dfsrr-server ${SOURCE_FILES})
 target_link_libraries(dfsrr-server dflog fmt common pthread mysqlclient)
