@@ -11,7 +11,8 @@
     {
         "type" : "tcp",
         "addr" : "0.0.0.0",
-        "port" : 4388
+        "port" : 4388,
+        "root" : "/home/dfsrr/dfsrr/public"
     },
     "database":
     {

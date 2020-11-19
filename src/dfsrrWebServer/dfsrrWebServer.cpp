@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-30 21:52:05
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-31 16:03:04
+// ModifyDate:   2020-11-19 20:41:16
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -19,6 +19,7 @@ namespace dfsrrWebServer
 
 
     WebServer::WebServer(const nlohmann::json &json)
+        : rootDir_("")
     {
         if (!this->parseConfig(json))
         {
@@ -60,6 +61,11 @@ namespace dfsrrWebServer
             }
             UINT16 port = serverIt->at("port");
             httpServerPtr_ = make_shared<HttpServer>(port, addr);
+
+            if (serverIt->find("root") != serverIt->end())
+            {
+                rootDir_ = serverIt->at("root");
+            }
         }
         catch (...)
         {
@@ -73,7 +79,7 @@ namespace dfsrrWebServer
 
     int WebServer::run()
     {
-        if (!routePtr_->route())
+        if (!routePtr_->route(rootDir_))
         {
             LOG(WARN, "set route failed!");
         }

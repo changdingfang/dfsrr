@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-30 21:27:59
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-10-31 11:02:40
+// ModifyDate:   2020-11-19 20:41:03
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __DFSRR_WEB_SERVER_H__
@@ -34,6 +34,7 @@ namespace dfsrrWebServer
     private:
         std::shared_ptr<common::HttpServer>  httpServerPtr_;
         std::unique_ptr<Route> routePtr_;
+        std::string rootDir_;
     };
 
 

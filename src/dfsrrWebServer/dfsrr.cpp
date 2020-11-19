@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 12:31:56
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-08 20:12:54
+// ModifyDate:   2020-11-19 20:40:43
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -170,6 +170,8 @@ namespace dfsrrWebServer
         Route::getInput(req, data);
         LOG(DEBUG, "data: [{}]", data);
         LOG(DEBUG, "==============================");
+
+        ::evhttp_add_header(::evhttp_request_get_output_headers(req), "Access-Control-Allow-Origin", "*");
 
         string response;
         DfsrrDataSelect *pDs = static_cast<DfsrrDataSelect *>(arg);
