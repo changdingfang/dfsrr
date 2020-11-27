@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 10:59:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-19 20:41:29
+// ModifyDate:   2020-11-27 19:16:45
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -350,7 +350,7 @@ not_found:
         shared_ptr<struct evbuffer> evb(::evbuffer_new()
                 , [](struct evbuffer *p) { if (p) ::evbuffer_free(p); });
 
-        if (!S_ISDIR(st.st_mode))
+        if (S_ISREG(st.st_mode))
         {
             /* Otherwise it's a file; and it to the buffer to get send via sendfile */
             shared_ptr<int> fd(new int(-1), [](int *p) { if (p && *p > 0) { ::close(*p); }});
