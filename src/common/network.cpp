@@ -1,9 +1,9 @@
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-// FileName:     network.cpp
-// Author:       dingfang
-// CreateDate:   2020-10-23 18:54:49
-// ModifyAuthor: dingfang
-// ModifyDate:   2020-10-30 08:23:59
+//  FileName:     network.cpp
+//  Author:       dingfang
+//  CreateDate:   2020-10-23 18:54:49
+//  ModifyAuthor: dingfang
+//  ModifyDate:   2021-01-04 19:24:18
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -267,6 +267,7 @@ namespace common
         else if (event & BEV_EVENT_ERROR)
         {
             LOG(ERROR, "some other error!");
+            LOG(ERROR, "error info: {}", EVUTIL_SOCKET_ERROR());
         }
         else if (event & BEV_EVENT_TIMEOUT)
         {
