@@ -3,7 +3,7 @@
 //  Author:       dingfang
 //  CreateDate:   2021-07-17 15:12:39
 //  ModifyAuthor: dingfang
-//  ModifyDate:   2021-07-18 09:18:57
+//  ModifyDate:   2021-07-18 10:44:25
 // =======================================================================
 
 #include "dflog/dflog.h"
@@ -214,7 +214,13 @@ int Exporter::getMetgrics(string &metrics)
     {
         string sql("select * from `");
         sql.append(mod);
-        sql.append("` order by timestamp desc limit 1");
+        if (mod == "traffic")
+        {
+            sql.append("` where `device` = \"total\" order by idx desc limit 1");
+        }
+        else {
+            sql.append("` order by idx desc limit 1");
+        }
 
         json data = json::array();
         if (!dbPtr_->execSql(sql, data))
