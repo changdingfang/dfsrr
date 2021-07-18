@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-10-31 10:59:19
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-27 19:16:45
+//  ModifyDate:   2021-07-17 16:07:26
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #include "dflog/dflog.h"
@@ -73,6 +73,7 @@ not_found:
         try
         {
             dsPtr_ = make_shared<DfsrrDataSelect>(conf);
+            dePtr_ = make_shared<Exporter>(conf);
         }
         catch (...)
         {
@@ -94,6 +95,9 @@ not_found:
         httpServerPtr_->setCallback("/dfsrr"
                 , DfsrrDataSelect::dfsrr
                 , static_cast<void *>(dsPtr_.get()));
+        httpServerPtr_->setCallback("/metrics"
+                , Exporter::exporter
+                , static_cast<void *>(dePtr_.get()));
 
         if (rootdir.empty())
         {

@@ -11,6 +11,7 @@
 
 #include "common/httpServer.h"
 #include "dfsrrWebServer/dfsrr.h"
+#include "dfsrrWebServer/dfsrrExporter.h"
 #include "event2/http.h"
 #include "nlohmann/json.hpp"
 
@@ -52,6 +53,7 @@ namespace dfsrrWebServer
     private:
         std::shared_ptr<common::HttpServer> httpServerPtr_;
         std::shared_ptr<DfsrrDataSelect>    dsPtr_;
+        std::shared_ptr<Exporter>           dePtr_;
         std::string rootdir_;
     };
 
