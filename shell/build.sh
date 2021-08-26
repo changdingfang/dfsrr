@@ -4,7 +4,7 @@
 # Author:       dingfang
 # CreateDate:   2020-10-28 20:42:57
 # ModifyAuthor: dingfang
-# ModifyDate:   2020-11-07 10:31:00
+#  ModifyDate:   2021-08-26 08:55:48
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -46,11 +46,17 @@ package()
     tar -zcf dfsrr.tar.gz dfsrr/
 }
 
-if [[ "$#" == "1" && "${1}" == "--depend" ]]; then
-    echo "编译第三方依赖... ..."
-    sleep 1
-    cd ${ROOTDIR}/../depend/src/
-    bash build.sh
+if [[ "$#" == "1" ]]; then
+    if [[ "${1}" == "--depend" ]]; then
+        echo "编译第三方依赖... ..."
+        sleep 1
+        cd ${ROOTDIR}/../depend/src/
+        bash build.sh
+    else
+        echo "输入的参数不正确"
+        echo "Usage: ./build.sh --depend"
+        exit 1
+    fi
 fi
 
 build
