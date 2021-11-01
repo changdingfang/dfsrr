@@ -3,7 +3,7 @@
 // Author:       dingfang
 // CreateDate:   2020-11-01 10:53:47
 // ModifyAuthor: dingfang
-// ModifyDate:   2020-11-01 11:48:28
+//  ModifyDate:   2021-11-01 23:39:04
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 #ifndef __STRING_UTIL_H__
@@ -25,14 +25,17 @@ namespace common
 
         std::vector<std::string> result;
         std::string::size_type posStart  = 0;
-        std::string::size_type posEnd    = -1;
+        std::string::size_type posEnd    = string::npos;
 
         while (posStart != std::string::npos)
         {
-            posStart = posEnd;
-            posEnd = str.find(pattern, posStart + 1);
-            result.push_back(str.substr(posStart + 1, posEnd - posStart - 1));
-            posStart = posEnd;
+            posEnd = str.find(pattern, posStart);
+            string splitStr(str.substr(posStart, posEnd - posStart));
+            if (!splitStr.empty())
+            {
+                result.emplace_back(std::move(splitStr));
+            }
+            posStart = (posEnd >= string::npos - pattern.size()) ? string::npos : posEnd + pattern.size();
         }
 
         return result;
